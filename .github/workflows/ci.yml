@@ -73,6 +73,7 @@ jobs:
             - name: Set up Gradle
               uses: gradle/actions/setup-gradle@v6
 
-            # Android의 build 태스크는 assemble, 단위 테스트, Android Lint를 포함
+            # Android의 build 태스크는 release 패키징까지 포함하므로,
+            # 서명 키가 없는 CI에서는 debug 빌드·단위 테스트·Lint로 검증한다.
             - name: Build, test and lint
-              run: ./gradlew build --stacktrace
+              run: ./gradlew assembleDebug test lint --stacktrace

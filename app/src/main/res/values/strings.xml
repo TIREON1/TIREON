@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TIREON</string>
+    <string name="app_placeholder">운전 코칭 기능을 준비하고 있습니다.</string>
+    <string name="vehicle_connection_status">차량 연결: %1$s</string>
+    <string name="distance_driven">누적 주행 거리: %1$s</string>
+    <string name="trip_driving_time">트립 주행 시간: %1$s</string>
+    <string name="value_unavailable">사용할 수 없음</string>
+    <string name="action_refresh">새로고침</string>
+</resources>

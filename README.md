@@ -24,7 +24,7 @@
 
 ## 1. 프로젝트 소개
 
-**TIREON(티레온)**은 초보 운전자가 자신의 운전 습관을 이해하고 개선할 수 있도록 돕는 AI 기반 운전 코칭 서비스입니다.
+<strong>TIREON(티레온)</strong>은 초보 운전자가 자신의 운전 습관을 이해하고 개선할 수 있도록 돕는 AI 기반 운전 코칭 서비스입니다.
 
 운전자는 주행 중 다양한 도로 상황과 차량 정보를 마주하지만, 자신의 운전 습관이 안전한지 객관적으로 판단하기 어렵습니다. 특히 운전 경험이 부족한 초보 운전자는 주행 중 발생하는 상황에 적절하게 대응하는 데 어려움을 겪을 수 있습니다.
 
@@ -209,7 +209,7 @@ cd TIREON
 
 Android Studio에서 프로젝트 폴더를 열고 Gradle 동기화를 진행합니다.
 
-※ 현재 저장소는 문서와 CI 설정 중심의 초기 상태입니다. Android Gradle 프로젝트가 구성된 이후에 아래 실행 절차를 사용할 수 있습니다.
+Android SDK 경로는 Android Studio가 자동으로 `local.properties`에 기록합니다. 이 파일은 커밋하지 않습니다.
 
 ### 7.3 SDK 및 개발 환경 설정
 
@@ -218,6 +218,18 @@ Android Studio에서 프로젝트 폴더를 열고 Gradle 동기화를 진행합
 3. 필요한 Pleos Connect SDK 및 개발 환경을 설정합니다.
 4. Gradle Sync를 실행하여 의존성을 동기화합니다.
 5. 필요한 경우 프로젝트에서 요구하는 로컬 설정을 진행합니다.
+
+Pleos Connect SDK 아티팩트는 `ai.pleos.playground` 그룹으로 Pleos Nexus에서 받아옵니다. SDK를 사용하는 코드는 `:pleos` 모듈에만 두어 다른 모듈로 SDK 타입이 노출되지 않게 합니다.
+
+차량 데이터 조회는 다음 순서를 따릅니다.
+
+1. `Vehicle(context)` 생성 후 `initialize()`
+2. `getXxx()`로 도메인 객체 획득
+3. `checkXxxCapabilities`로 지원 여부 확인
+4. 지원되는 경우에만 값을 조회
+5. 화면 종료 시 `release()`
+
+`Odometer` 조회에는 `pleos.car.permission.CAR_DRIVE` 권한이 필요하며, `:pleos` 모듈의 Manifest에 선언되어 있습니다. 이 권한은 런타임 승인 창이 아니라 Manifest 선언으로 부여됩니다.
 
 ### 7.4 애플리케이션 실행
 
@@ -228,17 +240,41 @@ Android Studio에서 프로젝트 폴더를 열고 Gradle 동기화를 진행합
 
 ### 7.5 빌드
 
-Android Gradle 프로젝트 구성 후 Gradle Wrapper를 사용하여 빌드할 수 있습니다.
+Gradle Wrapper를 사용하여 빌드합니다. JDK 21이 필요합니다.
 
 ```bash
-# macOS / Linux
-./gradlew build
+# 디버그 APK
+./gradlew assembleDebug
 
-# Windows
-gradlew.bat build
+# 단위 테스트 및 Lint
+./gradlew test lint
+
+# 릴리스 APK (서명 설정 필요)
+./gradlew assembleRelease
 ```
 
-※ 실제 실행에 필요한 SDK 설치, 에뮬레이터 설정, 실행 구성 및 추가 환경 변수는 프로젝트 설정에 따라 달라질 수 있습니다.
+서명된 릴리스 APK는 `app/build/outputs/apk/release/app-release.apk`에 생성됩니다.
+
+`./gradlew build`는 release 패키징을 포함하므로 서명 설정이 필요합니다. 서명 없이 전체 검증을 하려면 `./gradlew assembleDebug test lint`를 사용합니다.
+
+### 7.6 릴리스 서명
+
+릴리스 빌드는 저장소 루트의 `keystore.properties`를 사용합니다.
+
+```bash
+cp keystore.properties.example keystore.properties
+```
+
+| 항목 | 설명 |
+| --- | --- |
+| `storeFile` | 키스토어 파일의 절대 경로 (저장소 밖에 보관) |
+| `storePassword` | 키스토어 비밀번호 |
+| `keyAlias` | 키 별칭 |
+| `keyPassword` | 키 비밀번호 |
+
+`keystore.properties`와 키스토어 파일은 커밋하지 않습니다. 파일이 없거나 값이 비어 있으면 릴리스 빌드는 `verifyReleaseSigning` 단계에서 실패합니다.
+
+CI의 릴리스 워크플로는 GitHub Secrets로 `keystore.properties`를 생성하므로 별도 로컬 설정이 필요하지 않습니다.
 
 ## 8. CI (Continuous Integration)
 
@@ -263,7 +299,9 @@ Pull Request 및 `main` 브랜치 변경 시 문서 검사를 실행하고, Andr
 - Issue/PR 템플릿 YAML 유효성 검사
 - Gradle 의존성 및 프로젝트 설정 확인 (`gradlew` 존재 시)
 - Kotlin 코드 컴파일 및 단위 테스트 (`gradlew` 존재 시)
-- Android 애플리케이션 빌드 및 Lint (`gradlew` 존재 시)
+- Android 디버그 빌드 및 Lint (`gradlew` 존재 시)
+
+CI는 서명 키를 사용하지 않으므로 `assembleRelease` 대신 `assembleDebug`로 검증합니다.
 
 ### 8.3 CI 실행 조건
 
