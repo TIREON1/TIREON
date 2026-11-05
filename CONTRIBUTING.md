@@ -50,6 +50,7 @@ TIREON - 기여 및 협업 가이드
 | `fix/*`      | 버그 수정                  |
 | `refactor/*` | 코드 구조 개선             |
 | `docs/*`     | 문서 수정                  |
+| `chore/*`    | 빌드·설정·유지보수         |
 
 ### 브랜치 규칙
 
@@ -58,6 +59,7 @@ TIREON - 기여 및 협업 가이드
 3. 작업 완료 후 Pull Request를 생성합니다.
 4. 코드 리뷰 및 승인 이후 병합합니다.
 5. 브랜치 이름은 작업 내용을 명확하게 표현합니다.
+6. 병합은 squash만 사용하며, 병합된 브랜치는 삭제합니다.
 
 ### 브랜치 이름 예시
 
@@ -66,6 +68,7 @@ TIREON - 기여 및 협업 가이드
 - `feature/driving-analysis`
 - `fix/voice-recognition`
 - `docs/api-specification`
+- `chore/dependency-update`
 
 ## 3. 커밋 규칙 (Commit Convention)
 
@@ -133,6 +136,7 @@ TIREON - 기여 및 협업 가이드
 5. AI가 생성하거나 수정한 코드도 작성자가 직접 검토해야 합니다.
 6. 최소 1명의 다른 팀원에게 Code Review를 요청합니다.
 7. 승인 이후 병합합니다.
+8. 저장소 관리자 권한으로 리뷰 규칙을 우회하지 않습니다. 긴급한 경우 팀에 먼저 공유합니다.
 
 ### 코드 리뷰 기준
 
