@@ -31,6 +31,9 @@ captures/
 *.dex
 *.class
 
+# Submission APK (contest requires the APK inside the repository)
+!apk/*.apk
+
 # Native build
 .cxx/
 .externalNativeBuild/
