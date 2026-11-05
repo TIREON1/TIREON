@@ -335,6 +335,7 @@ TIREON은 GitHub를 통해 소스 코드와 작업 내용을 관리합니다.
 | `fix/*`      | 버그 수정            |
 | `refactor/*` | 코드 구조 개선       |
 | `docs/*`     | 문서 수정            |
+| `chore/*`    | 빌드·설정·유지보수   |
 
 ### Commit Convention
 
