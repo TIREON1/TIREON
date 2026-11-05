@@ -1,0 +1,77 @@
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    docs:
+        name: Docs & templates
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install dependencies
+              run: python -m pip install --quiet --disable-pip-version-check pyyaml
+
+            - name: Check documents and templates
+              run: python .github/scripts/check_docs.py
+
+    detect:
+        name: Detect Gradle project
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        outputs:
+            has_gradle: ${{ steps.check.outputs.has_gradle }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Check for Gradle wrapper
+              id: check
+              run: |
+                  if [ -f gradlew ]; then
+                    echo "has_gradle=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has_gradle=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice::gradlew가 없어 Android 검사를 건너뜁니다."
+                  fi
+
+    android:
+        name: Android build, test & lint
+        needs: detect
+        if: needs.detect.outputs.has_gradle == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up JDK 21
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: "21"
+
+            - name: Set up Gradle
+              uses: gradle/actions/setup-gradle@v4
+
+            # Android의 build 태스크는 assemble, 단위 테스트, Android Lint를 포함
+            - name: Build, test and lint
+              run: ./gradlew build --stacktrace

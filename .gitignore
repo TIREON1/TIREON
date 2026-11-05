@@ -1,0 +1,92 @@
+# ==========================================
+# TIREON
+# ==========================================
+
+# Gradle
+.gradle/
+.gradle-cache/
+build/
+**/build/
+out/
+
+# Kotlin
+.kotlin/
+*.kotlin_module
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Android SDK local configuration
+local.properties
+captures/
+
+# Android build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Native build
+.cxx/
+.externalNativeBuild/
+obj/
+
+# Signing keys and certificates
+*.jks
+*.keystore
+*.p12
+*.pfx
+key.properties
+keystore.properties
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+secrets.properties
+local.properties
+
+# Service credentials
+service-account*.json
+credentials*.json
+
+# Google services configuration
+google-services.json
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Test / profiling outputs
+*.hprof
+*.trace
+*.prof
+
+# Generated documentation
+/site/
+
+# AI coding tools
+.claude/
+CLAUDE.md
+.opencode/
+opencode.json
+.omo/
+.oh-my-opencode/
+
