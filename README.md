@@ -221,6 +221,16 @@ Android SDK 경로는 Android Studio가 자동으로 `local.properties`에 기�
 
 Pleos Connect SDK 아티팩트는 `ai.pleos.playground` 그룹으로 Pleos Nexus에서 받아옵니다. SDK를 사용하는 코드는 `:pleos` 모듈에만 두어 다른 모듈로 SDK 타입이 노출되지 않게 합니다.
 
+차량 데이터 조회는 다음 순서를 따릅니다.
+
+1. `Vehicle(context)` 생성 후 `initialize()`
+2. `getXxx()`로 도메인 객체 획득
+3. `checkXxxCapabilities`로 지원 여부 확인
+4. 지원되는 경우에만 값을 조회
+5. 화면 종료 시 `release()`
+
+`Odometer` 조회에는 `pleos.car.permission.CAR_DRIVE` 권한이 필요하며, `:pleos` 모듈의 Manifest에 선언되어 있습니다. 이 권한은 런타임 승인 창이 아니라 Manifest 선언으로 부여됩니다.
+
 ### 7.4 애플리케이션 실행
 
 1. Pleos Connect Emulator를 실행합니다.

@@ -32,8 +32,13 @@ kotlin {
 }
 
 dependencies {
-    // Pleos Connect SDK는 이 모듈 밖으로 노출하지 않는다.
+    // Pleos Connect SDK 자체는 이 모듈 밖으로 노출하지 않는다.
     implementation(libs.pleos.vehicle)
 
+    // DrivingViewModel은 :app에서 직접 사용하므로 api로 노출한다.
+    api(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
 }
