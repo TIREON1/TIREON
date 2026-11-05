@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Odometer 조회에 필요한 최소 권한만 선언한다.
+      공식 가이드(Declaring permission) 기준으로 CAR_DRIVE가
+      Odometer의 조회·Capability API에 필요하다.
+      제어(CONTROL_CAR_*) 권한은 사용하지 않으므로 선언하지 않는다.
+    -->
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+
+</manifest>
