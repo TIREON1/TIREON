@@ -70,7 +70,7 @@ jobs:
                   java-version: "21"
 
             - name: Set up Gradle
-              uses: gradle/actions/setup-gradle@v4
+              uses: gradle/actions/setup-gradle@v6
 
             # Android의 build 태스크는 assemble, 단위 테스트, Android Lint를 포함
             - name: Build, test and lint
