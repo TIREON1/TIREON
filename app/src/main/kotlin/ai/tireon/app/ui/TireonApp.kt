@@ -65,7 +65,8 @@ private fun TireonContent(
             Text(
                 text = stringResource(
                     R.string.distance_driven,
-                    state.distanceDriven?.toString() ?: stringResource(R.string.value_unavailable),
+                    DrivingDisplay.distance(state.distanceDriven)
+                        ?: stringResource(R.string.value_unavailable),
                 ),
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -73,7 +74,8 @@ private fun TireonContent(
             Text(
                 text = stringResource(
                     R.string.trip_driving_time,
-                    state.tripDrivingTime?.toString() ?: stringResource(R.string.value_unavailable),
+                    DrivingDisplay.drivingTime(state.tripDrivingTime)
+                        ?: stringResource(R.string.value_unavailable),
                 ),
                 style = MaterialTheme.typography.titleMedium,
             )
