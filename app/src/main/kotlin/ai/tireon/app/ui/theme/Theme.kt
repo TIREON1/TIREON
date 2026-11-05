@@ -1,4 +1,4 @@
-package com.tireon.app.ui.theme
+package ai.tireon.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

@@ -1,13 +1,13 @@
-package com.tireon.pleos
+package ai.tireon.pleos
 
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.tireon.pleos.vehicle.OdometerClient
-import com.tireon.pleos.vehicle.VehicleResult
-import com.tireon.pleos.vehicle.VehicleSession
+import ai.tireon.pleos.vehicle.OdometerClient
+import ai.tireon.pleos.vehicle.VehicleResult
+import ai.tireon.pleos.vehicle.VehicleSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -105,7 +105,12 @@ class DrivingViewModel(context: Context) : ViewModel() {
 
     private fun VehicleResult<*>.logIfFailed() {
         when (this) {
-            is VehicleResult.Failure -> Log.e(TAG, "Vehicle API 실패: $operation", cause)
+            is VehicleResult.Failure -> Log.e(
+                TAG,
+                "Vehicle API 실패: $operation${code?.let { " ($it)" } ?: ""}",
+                cause,
+            )
+
             is VehicleResult.Unsupported -> Log.i(TAG, "Vehicle API 미지원: $operation ($detail)")
             is VehicleResult.Success -> Unit
         }

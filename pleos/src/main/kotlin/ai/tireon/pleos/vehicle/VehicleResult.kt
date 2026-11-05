@@ -1,6 +1,7 @@
-package com.tireon.pleos.vehicle
+package ai.tireon.pleos.vehicle
 
 import ai.pleos.playground.vehicle.api.model.capability.AccessType
+import ai.pleos.playground.vehicle.constant.ErrorCode
 
 /**
  * Pleos Vehicle SDK 사용 결과.
@@ -25,10 +26,12 @@ sealed interface VehicleResult<out T> {
     /**
      * @param operation 실패한 작업 이름 (로그·진단용)
      * @param cause SDK가 onFailed로 전달한 예외
+     * @param code 예외에서 추출한 오류 코드 (확인 불가 시 null)
      */
     data class Failure(
         val operation: String,
         val cause: Exception,
+        val code: ErrorCode? = null,
     ) : VehicleResult<Nothing>
 
     companion object {
@@ -38,17 +41,25 @@ sealed interface VehicleResult<out T> {
                 operation = operation,
                 detail = "accessType=$accessType",
             )
+    }
+}
 
-        /**
-         * Capability 조회 자체가 실패한 경우.
-         *
-         * SDK는 미지원 기능을 onFailed로 알리므로 미지원으로 분류한다.
-         * 오류 코드로 분기할 수 없어(문서의 VehicleException 미제공) 예외 메시지를 보존한다.
-         */
-        fun capabilityUnavailable(operation: String, cause: Exception): Unsupported =
-            Unsupported(
-                operation = operation,
-                detail = cause.message ?: cause::class.java.simpleName,
-            )
+/**
+ * SDK 예외를 결과로 변환한다.
+ *
+ * 오류 코드로 미지원 여부를 판별할 수 있으면 [VehicleResult.Unsupported]로,
+ * 그 외는 [VehicleResult.Failure]로 전달한다.
+ */
+internal fun failed(
+    operation: String,
+    cause: Exception,
+): VehicleResult<Nothing> {
+    val code = VehicleErrorCodes.from(cause)
+    return when (code) {
+        ErrorCode.ERROR_NOT_SUPPORTED_PROPERTY,
+        ErrorCode.ERROR_NOT_SUPPORTED_AREA,
+        -> VehicleResult.Unsupported(operation = operation, detail = code.name)
+
+        else -> VehicleResult.Failure(operation = operation, cause = cause, code = code)
     }
 }

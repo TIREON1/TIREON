@@ -22,11 +22,11 @@ val missingSigningProperties = requiredSigningProperties.filter {
 val releaseSigningConfigured = keystorePropertiesFile.isFile && missingSigningProperties.isEmpty()
 
 android {
-    namespace = "com.tireon.app"
+    namespace = "ai.tireon.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.tireon.app"
+        applicationId = "ai.tireon.app"
         minSdk = 28
         targetSdk = 34
         versionCode = 1

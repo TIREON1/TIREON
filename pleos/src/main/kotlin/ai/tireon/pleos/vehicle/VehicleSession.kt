@@ -1,4 +1,4 @@
-package com.tireon.pleos.vehicle
+package ai.tireon.pleos.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.Odometer

@@ -1,4 +1,4 @@
-package com.tireon.core
+package ai.tireon.core
 
 /**
  * 운전 코칭 도메인 모델의 시작점.

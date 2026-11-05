@@ -1,4 +1,4 @@
-package com.tireon.pleos.vehicle
+package ai.tireon.pleos.vehicle
 
 import ai.pleos.playground.vehicle.api.Odometer
 
@@ -11,10 +11,7 @@ import ai.pleos.playground.vehicle.api.Odometer
  * 주의
  * - Odometer API는 거리 단위(km/mile)를 함께 반환하지 않고, 단위 조회 API도
  *   확인되지 않았다. 따라서 값만 전달하며 호출 측에서 단위를 임의로 붙이지 않는다.
- * - 기능 미지원은 `onFailed`에 `ERROR_NOT_SUPPORTED_PROPERTY`로 전달될 수 있다.
- *   이 오류는 문서상 `VehicleException.errorCode`로 노출되지만 실제 배포된
- *   Vehicle 2.3.2 아티팩트에는 해당 클래스가 없어 코드로 분기할 수 없다.
- *   따라서 미지원 판정은 Capability 결과만 신뢰한다.
+ * - 미지원 오류(`ERROR_NOT_SUPPORTED_*`)는 [VehicleResult.Unsupported]로 변환한다.
  */
 class OdometerClient(private val odometer: Odometer) {
 
@@ -30,10 +27,10 @@ class OdometerClient(private val odometer: Odometer) {
                 }
                 odometer.getCurrentDistanceDriven(
                     onComplete = { value -> onResult(value.resultOrEmpty(OPERATION_DISTANCE_GET)) },
-                    onFailed = { onResult(VehicleResult.Failure(OPERATION_DISTANCE_GET, it)) },
+                    onFailed = { onResult(failed(OPERATION_DISTANCE_GET, it)) },
                 )
             },
-            onFailed = { onResult(VehicleResult.capabilityUnavailable(OPERATION_DISTANCE_CAPABILITY, it)) },
+            onFailed = { onResult(failed(OPERATION_DISTANCE_CAPABILITY, it)) },
         )
     }
 
@@ -49,10 +46,10 @@ class OdometerClient(private val odometer: Odometer) {
                 }
                 odometer.getTripCurrentDrivingTime(
                     onComplete = { value -> onResult(value.resultOrEmpty(OPERATION_TIME_GET)) },
-                    onFailed = { onResult(VehicleResult.Failure(OPERATION_TIME_GET, it)) },
+                    onFailed = { onResult(failed(OPERATION_TIME_GET, it)) },
                 )
             },
-            onFailed = { onResult(VehicleResult.capabilityUnavailable(OPERATION_TIME_CAPABILITY, it)) },
+            onFailed = { onResult(failed(OPERATION_TIME_CAPABILITY, it)) },
         )
     }
 

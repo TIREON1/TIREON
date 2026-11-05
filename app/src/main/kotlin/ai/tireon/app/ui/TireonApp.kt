@@ -1,4 +1,4 @@
-package com.tireon.app.ui
+package ai.tireon.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +18,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tireon.app.R
-import com.tireon.pleos.DrivingUiState
-import com.tireon.pleos.DrivingViewModel
+import ai.tireon.app.R
+import ai.tireon.pleos.DrivingUiState
+import ai.tireon.pleos.DrivingViewModel
 
 @Composable
 fun TireonApp(

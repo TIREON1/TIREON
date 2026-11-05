@@ -1,4 +1,4 @@
-package com.tireon.core
+package ai.tireon.core
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
