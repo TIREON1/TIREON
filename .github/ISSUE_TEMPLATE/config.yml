@@ -1,0 +1,9 @@
+# TIREON - Issue 템플릿 설정
+# 별도 템플릿 없이 Issue를 생성할 수 있도록 허용합니다.
+blank_issues_enabled: true
+
+# 프로젝트 개발 및 협업 가이드
+contact_links:
+    - name: TIREON 개발 및 협업 가이드
+      url: https://github.com/tireon1/tireon/blob/main/CONTRIBUTING.md
+      about: 프로젝트 개발 규칙과 협업 방법을 확인합니다.
