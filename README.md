@@ -382,3 +382,5 @@ docs: README 작성
 <p align="center">
   <b>TIREON</b>
 </p>
+
+# CODEOWNERS 동작 검증용 임시 변경
