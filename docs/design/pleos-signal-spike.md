@@ -28,10 +28,10 @@ Pleos는 AAOS Alignment 정책을 따릅니다. 그래서 속도 같은 표준 �
 Pleos 웹사이트의 Develop 페이지에는 ADAS SDK가 objects, lane markings,
 parking spaces를 제공한다고 소개되어 있습니다. 하지만 확인해 보니:
 
-- 공식 문서 트리에 ADAS 항목이 없습니다 (`/ADAS/intro`는 안내 페이지)
-- Maven 저장소에서 ADAS 아티팩트를 받을 수 없습니다 (404)
+- 공식 문서 트리에 ADAS 항목이 없습니다 (`/ADAS/intro`는 안내 페이지).
+- Maven 저장소에서 ADAS 아티팩트를 받을 수 없습니다 (404).
 - [API Compatibility](https://document.pleos.ai/en/docs/pleos-only/vehicle-app-planning-guide/api-compatibility-availability)에
-  "Pleos Connect SDK – ADAS | Not supported"로 표기되어 있습니다
+  "Pleos Connect SDK - ADAS | Not supported"로 표기되어 있습니다.
 
 결론은 ADAS를 사용하지 않는 것입니다. 문서와 배포 채널이 모두 없으므로
 근거 없는 구현이 됩니다. 전방 차량과 차선 인식 기반 코칭은 제외합니다.
