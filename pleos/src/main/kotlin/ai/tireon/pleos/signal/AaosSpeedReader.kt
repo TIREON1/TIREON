@@ -90,11 +90,12 @@ class AaosSpeedReader(context: Context) {
         const val PERF_VEHICLE_SPEED = 0x11600207
 
         /**
-         * 요청 주파수는 1Hz로 둔다.
+         * 요청 주파수는 10Hz다.
          *
-         * 에뮬레이터에서 getCarPropertyConfig가 null을 반환해 지원 범위를 알 수 없다.
-         * 실제 갱신 간격은 수신 타임스탬프로 다시 계산해야 한다.
+         * 이 프로퍼티의 지원 범위가 min 10Hz, max 20Hz라서 1Hz로 등록하면
+         * "propertyId is not in carPropertyConfig list"로 거부된다(실측).
+         * 집계는 별도 주기로 하므로 콜백 주기가 높아도 샘플 수는 늘지 않는다.
          */
-        const val SAMPLE_RATE_HZ = 1f
+        const val SAMPLE_RATE_HZ = 10f
     }
 }

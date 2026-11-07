@@ -47,6 +47,51 @@ parking spaces를 제공한다고 소개되어 있습니다. 하지만 확인해
 결론은 AI 코칭을 앱 자체 구현이나 외부 API로 처리하는 것입니다.
 Gleo Interface는 추후 음성 명령 연동 옵션으로만 검토합니다.
 
+## 신호 수집 계층 통합 검증
+
+`:pleos`에 신호 수집 계층을 구현한 뒤 에뮬레이터에서 실제 수집을 확인했습니다.
+
+### 결과
+
+1Hz 샘플이 정상 생성되고, 주입한 값이 그대로 반영됩니다.
+
+| 샘플 | gear | speed | steer | brake | signal |
+|---|---|---|---|---|---|
+| n=4 | DRIVE | 0.0 | 0.0 | false | OFF |
+| n=5 | DRIVE | 0.0 | 0.0 | false | LEFT |
+| n=7 | DRIVE | 12.5 | 120.0 | false | LEFT |
+| n=9 | DRIVE | 12.5 | 0.0 | true | LEFT |
+
+- 속도 12.5 m/s는 주입값 45 km/h에 해당합니다.
+- 조향 120.0은 주입값 120과 부호까지 일치합니다.
+- 기어, 브레이크, 방향지시등 모두 주입대로 바뀝니다.
+- 세션 종료 신호를 보내자 샘플이 정확히 멈췄습니다(n=20이 마지막). 리스너 해제가 동작합니다.
+
+### 검증 중 발견한 것
+
+구현 단계에서 두 가지를 실측으로 바로잡았습니다.
+
+1. **차속 권한은 `CAR_SPEED`다.** `CAR_POWERTRAIN`만 선언하면 `getProperty`가
+   `SecurityException: requires android.car.permission.CAR_SPEED`로 실패합니다.
+   스파이크에서 성공했던 것은 두 권한을 함께 선언했기 때문입니다.
+2. **기어는 Pleos SDK 대신 AAOS `GEAR_SELECTION`을 쓴다.** Pleos SDK의
+   `Gear` 도메인은 deprecated이고, 공식 안내가 "Google GEAR_SELECTION property를
+   쓰라"고 지시합니다. Pleos 문서의 API 선택 기준도 기어를 AAOS 표준 데이터로
+   분류합니다. 문서상 `GEAR_SELECTION`은 O(사용 가능)입니다.
+
+### 참고: 프로퍼티 지원 범위
+
+`dumpsys car_service`에서 확인한 차속 프로퍼티 설정입니다.
+
+```
+Property:0x11600207, PERF_VEHICLE_SPEED, access:0x1, changeMode:0x2
+fs min:10.0, fs max:20.0
+```
+
+권한이 있으면 요청 주파수 1Hz, 10Hz, 20Hz 모두 등록됩니다. 선언된 최소
+주파수는 10Hz지만 더 낮은 요청을 거부하지는 않습니다. 집계는 별도 주기로 하므로
+콜백 주기가 높아도 샘플 수는 늘지 않습니다.
+
 ## 방법
 
 1. `:pleos`에 `SignalProbe`와 `LocationProbe`를 두고 Vehicle SDK 신호 검증
