@@ -23,6 +23,9 @@ class AaosSpeedReader(context: Context) {
     private var callback: CarPropertyManager.CarPropertyEventCallback? = null
 
     /** @return 등록에 성공하면 true. 실패하면 false를 반환하고 로그만 남긴다. */
+    // android.car.jar 1.0.0에는 대체 API가 없어 구 API를 쓴다.
+    // minSdk 28과 호환되므로 교체 시점을 별도로 판단한다.
+    @Suppress("DEPRECATION")
     fun start(onSpeed: (Float?) -> Unit): Boolean {
         if (callback != null) return true
 
@@ -69,6 +72,7 @@ class AaosSpeedReader(context: Context) {
         }
     }
 
+    @Suppress("DEPRECATION")
     fun stop() {
         callback?.let { listener ->
             runCatching { propertyManager?.unregisterCallback(listener) }

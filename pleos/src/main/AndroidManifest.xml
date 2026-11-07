@@ -12,4 +12,7 @@
     <!-- 차속(PERF_VEHICLE_SPEED)은 Pleos SDK에 없고 AAOS 표준 API로 읽는다. -->
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
+    <!-- 방향지시등(TurnSignal) 조회에 필요하다. -->
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+
 </manifest>
