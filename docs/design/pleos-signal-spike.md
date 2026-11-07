@@ -65,6 +65,60 @@ curl "http://localhost:18088/vehicle/controls?brake=90&steering=120"
 adb emu geo fix -122.084 37.4252
 ```
 
+## DO와 CarUxRestrictions 검증 결과
+
+DO(Distraction Optimization) 차단 동작을 검증하려고 별도 스파이크를 진행했습니다.
+
+### 확인된 것
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| 매니페스트 메타데이터 인식 | 시스템이 읽음 | 홈스크린 로그에 `distractionOptimized: true` |
+| `CarUxRestrictionsManager` 획득 | 성공 | `uxManager=true` |
+| 리스너 등록 | 성공 | 콜백 대기 상태 |
+| `UX_CURRENT` 조회 | 성공 | `requiresDO=false active=0x0` |
+| 속도와 UX 제한의 관계 | 무관함 | 속도 40km/h 상태에서도 `requiresDO=false` |
+
+### 확인하지 못한 것
+
+DO 차단 동작은 이 에뮬레이터에서 검증할 수 없습니다.
+
+```
+ro.build.type       = user
+ro.build.flavor     = crp_avd_arm64-user
+ro.debuggable       = 0
+```
+
+Pleos 에뮬레이터 시스템 이미지는 user 빌드 단일 변형으로만 배포됩니다
+(`android-automotive/arm64-v8a`, 42dot). userdebug 이미지는 로컬에도 원격
+저장소에도 없습니다. 검증에 필요한 명령이 모두 차단됩니다.
+
+| 명령 | 결과 |
+|---|---|
+| `cmd car_service enable-uxr` | `requires non-user build` |
+| `cmd car_service get-do-activities` | `requires non-user build` |
+| `cmd car_service inject-vhal-event` | `requires non-user build` |
+| Virtual Console 기어와 속도 주입 | `emulator_active`가 계속 false로 풀림 |
+
+Android 문서에도 같은 조건이 적혀 있습니다. DO는 trusted source 설치이거나
+userdebug 이미지일 때만 효력이 있습니다. 이 환경은 둘 다 아닙니다.
+
+### 대응: DO 선언과 자체 축소를 함께 둔다
+
+플랫폼이 막아주는지에 의존하지 않습니다. 앱이 `CarUxRestrictions`를 구독해
+`requiresDO=true`이면 스스로 화면을 숫자 1개로 축소합니다. 플랫폼이
+차단하든 안 하든 안전한 상태가 유지됩니다.
+
+이 로직은 에뮬레이터에서 시험할 수 없으므로 단위 테스트로 검증합니다.
+`CarUxRestrictions` → UI 상태 변환을 순수 함수로 분리하면 JVM에서 확인할 수
+있습니다.
+
+### 남는 위험
+
+실차에서 DO가 동작하지 않으면 주행 중 연습 화면이 플랫폼에 의해 가려집니다.
+이 경우 연습 기능은 주차 상태에서만 쓸 수 있습니다. 앱이 멈추거나 안전 규정을
+위반하지는 않습니다.
+
 ## 검증 결과
 
 ### 속도: 사용 가능 (문서와 실측)
