@@ -35,6 +35,10 @@ dependencies {
     // 도메인 타입(DrivingSample 등)은 :core에 있고, 공개 API로 노출되므로 api로 둔다.
     api(project(":core"))
 
+    // AAOS CarPropertyManager는 차량 프레임워크가 런타임에 제공한다.
+    // 컴파일 시점에만 필요하므로 compileOnly로 둔다.
+    compileOnly(files("${android.sdkDirectory}/platforms/android-36/optional/android.car.jar"))
+
     // Pleos Connect SDK 자체는 이 모듈 밖으로 노출하지 않는다.
     implementation(libs.pleos.vehicle)
     // Vehicle POM이 vehicle-data를 runtime scope로만 선언해 ErrorCode 등이
