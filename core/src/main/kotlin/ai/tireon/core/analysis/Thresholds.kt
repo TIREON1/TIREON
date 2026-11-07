@@ -33,6 +33,16 @@ object Thresholds {
     const val VALID_MIN_DURATION_SEC = 60
     const val VALID_MIN_SAMPLES = 20
 
+    /**
+     * 감점 비율을 계산할 때 쓰는 거리 하한.
+     *
+     * 짧은 주행에서 이벤트 하나가 과도하게 반영되는 것을 막는다.
+     */
+    const val SCORE_DISTANCE_FLOOR_KM = 1f
+
+    /** 이 점수 이상이면 칭찬 문장으로 안내한다. */
+    const val GOOD_SCORE = 80
+
     /** 이벤트 종류별 감점 가중치. */
     const val W_HARSH_BRAKE = 8
     const val W_HARSH_ACCEL = 6

@@ -2,8 +2,10 @@ package ai.tireon.core.coach
 
 import ai.tireon.core.analysis.InsufficientReason
 import ai.tireon.core.analysis.ScoreResult
+import ai.tireon.core.analysis.Thresholds
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
+import java.util.Locale
 import kotlin.math.abs
 
 /**
@@ -87,32 +89,35 @@ class CoachMessages {
             DrivingEventType.HARSH_BRAKE -> CoachMessage(
                 text = "급제동이 ${count}번 있었어요. 브레이크를 조금 더 미리 밟아보세요.",
                 severity = Severity.CRITICAL,
-                evidence = "감속도 -%.1f m/s² (측정)".format(extreme),
+                evidence = String.format(Locale.KOREAN, "감속도 -%.1f m/s² (측정)", extreme),
             )
 
             DrivingEventType.HARSH_ACCEL -> CoachMessage(
                 text = "급가속이 ${count}번 있었어요. 출발할 때 가속 페달을 천천히 밟아보세요.",
                 severity = Severity.WARN,
-                evidence = "가속도 +%.1f m/s² (측정)".format(extreme),
+                evidence = String.format(Locale.KOREAN, "가속도 +%.1f m/s² (측정)", extreme),
             )
 
             DrivingEventType.HARSH_STEER -> CoachMessage(
                 text = "핸들을 급하게 돌린 구간이 ${count}번 있었어요.",
                 severity = Severity.WARN,
-                evidence = "조향 속도 %.1f °/s (측정)".format(extreme),
+                evidence = String.format(Locale.KOREAN, "조향 속도 %.1f °/s (측정)", extreme),
             )
 
             DrivingEventType.MISSING_TURN_SIGNAL -> CoachMessage(
                 text = "방향지시등 없이 핸들을 돌린 구간이 ${count}번 있었어요.",
                 severity = Severity.WARN,
-                evidence = "조향 %.1f° 변화 (측정)".format(extreme),
+                evidence = String.format(Locale.KOREAN, "조향 %.1f° 변화 (측정)", extreme),
             )
         }
     }
 
     private fun scoreMessage(scored: ScoreResult.Scored): CoachMessage {
         val value = scored.score.value
-        val top = scored.breakdown.firstOrNull()
+
+        // 감점이 0으로 반올림된 항목은 개선 제안에서 제외한다.
+        // 100점인데 "줄이면 더 좋아져요"라고 하면 신뢰를 잃는다.
+        val top = scored.breakdown.firstOrNull { it.penalty > 0 }
 
         val text = if (top == null) {
             "오늘은 ${value}점이에요."
@@ -122,7 +127,7 @@ class CoachMessages {
 
         return CoachMessage(
             text = text,
-            severity = if (value >= GOOD_SCORE) Severity.GOOD else Severity.WARN,
+            severity = if (value >= Thresholds.GOOD_SCORE) Severity.GOOD else Severity.WARN,
             evidence = null,
         )
     }
@@ -132,9 +137,5 @@ class CoachMessages {
         DrivingEventType.HARSH_ACCEL -> "급가속"
         DrivingEventType.HARSH_STEER -> "급조향"
         DrivingEventType.MISSING_TURN_SIGNAL -> "방향지시등 누락"
-    }
-
-    private companion object {
-        const val GOOD_SCORE = 80
     }
 }

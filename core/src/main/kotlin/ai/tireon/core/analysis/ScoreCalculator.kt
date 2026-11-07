@@ -46,7 +46,10 @@ class ScoreCalculator {
         durationSec: Int,
         sampleCount: Int,
     ): ScoreResult {
-        if (distanceKm < Thresholds.VALID_MIN_DISTANCE_KM) {
+        // 차량 데이터는 신뢰할 수 없는 입력이다. NaN·무한대가 들어오면
+        // 거리 비교가 통과해 NaN 감점으로 예외가 나거나 100점이 만들어질 수 있다.
+        val usableDistance = distanceKm.isFinite() && distanceKm >= 0f
+        if (!usableDistance || distanceKm < Thresholds.VALID_MIN_DISTANCE_KM) {
             return ScoreResult.Insufficient(InsufficientReason.DISTANCE_TOO_SHORT)
         }
         if (durationSec < Thresholds.VALID_MIN_DURATION_SEC) {
@@ -56,7 +59,7 @@ class ScoreCalculator {
             return ScoreResult.Insufficient(InsufficientReason.NOT_ENOUGH_SAMPLES)
         }
 
-        val effectiveDistance = maxOf(distanceKm, 1f)
+        val effectiveDistance = maxOf(distanceKm, Thresholds.SCORE_DISTANCE_FLOOR_KM)
         val counts = events.groupingBy { it.type }.eachCount()
 
         val breakdown = counts
