@@ -171,7 +171,7 @@ class EventDetector {
 
         fun closeRun() {
             val start = runStartMs
-            if (start != null && runPairs >= MIN_CONFIRMING_PAIRS) {
+            if (start != null && runPairs >= Thresholds.STEER_MIN_CONFIRMING_PAIRS) {
                 events += DrivingEvent(
                     type = DrivingEventType.HARSH_STEER,
                     atMs = start,
@@ -348,9 +348,4 @@ class EventDetector {
     }
 
     // endregion
-
-    private companion object {
-        /** 한 샘플짜리 스파이크를 조향 동작으로 인정하지 않기 위한 최소 연속 쌍 수. */
-        const val MIN_CONFIRMING_PAIRS = 2
-    }
 }

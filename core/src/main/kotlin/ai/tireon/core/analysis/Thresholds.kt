@@ -21,6 +21,13 @@ object Thresholds {
     /** 이벤트로 인정하는 최소 지속 시간. */
     const val EVENT_MIN_DURATION_MS = 500L
 
+    /**
+     * 급조향으로 인정하는 최소 연속 쌍 수.
+     *
+     * 한 샘플짜리 스파이크(0→60→0)는 노이즈일 가능성이 높아 이벤트로 세지 않는다.
+     */
+    const val STEER_MIN_CONFIRMING_PAIRS = 2
+
     /** 가속도 계산에 쓰는 샘플 간격 허용 범위. 이 밖이면 계산하지 않는다. */
     const val MIN_SAMPLE_GAP_MS = 50L
     const val MAX_SAMPLE_GAP_MS = 500L
