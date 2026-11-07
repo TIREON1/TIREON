@@ -32,6 +32,9 @@ kotlin {
 }
 
 dependencies {
+    // 도메인 타입(DrivingSample 등)은 :core에 있고, 공개 API로 노출되므로 api로 둔다.
+    api(project(":core"))
+
     // Pleos Connect SDK 자체는 이 모듈 밖으로 노출하지 않는다.
     implementation(libs.pleos.vehicle)
     // Vehicle POM이 vehicle-data를 runtime scope로만 선언해 ErrorCode 등이
