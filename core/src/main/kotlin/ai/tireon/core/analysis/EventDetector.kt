@@ -4,6 +4,7 @@ import ai.tireon.core.driving.Confidence
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
 import ai.tireon.core.driving.DrivingSample
+import ai.tireon.core.driving.TurnSignal
 import kotlin.math.abs
 
 /**
@@ -17,8 +18,130 @@ class EventDetector {
     fun detect(samples: List<DrivingSample>): List<DrivingEvent> {
         if (samples.size < 2) return emptyList()
 
-        val accelerationEvents = detectAcceleration(samples)
-        return accelerationEvents.sortedBy { it.atMs }
+        val events = buildList {
+            addAll(detectAcceleration(samples))
+            addAll(detectHarshSteering(samples))
+            addAll(detectMissingTurnSignal(samples))
+        }
+        return events.sortedBy { it.atMs }
+    }
+
+    /**
+     * 속도와 조향을 모두 알 때만 조향각 변화율을 판정한다.
+     *
+     * 연속된 구간은 하나의 조향 동작으로 묶는다. 250도/초로 400ms 돌린 것을
+     * 4회로 세면 감점이 4배가 되기 때문이다.
+     */
+    private fun detectHarshSteering(samples: List<DrivingSample>): List<DrivingEvent> {
+        val events = mutableListOf<DrivingEvent>()
+
+        var runStartMs: Long? = null
+        var runEndMs = 0L
+        var runMaxRate = 0f
+
+        fun closeRun() {
+            val start = runStartMs ?: return
+            events += DrivingEvent(
+                type = DrivingEventType.HARSH_STEER,
+                atMs = start,
+                value = runMaxRate,
+                confidence = Confidence.MEASURED,
+            )
+            runStartMs = null
+            runMaxRate = 0f
+        }
+
+        for (i in 1 until samples.size) {
+            val previous = samples[i - 1]
+            val current = samples[i]
+
+            val steerBefore = previous.steeringDeg
+            val steerAfter = current.steeringDeg
+            val speed = current.speedMps ?: previous.speedMps
+            val dtMs = current.timestampMs - previous.timestampMs
+
+            val calculable = steerBefore != null && steerAfter != null &&
+                speed != null && speed > Thresholds.HARSH_STEER_MIN_SPEED_MPS &&
+                dtMs in Thresholds.MIN_SAMPLE_GAP_MS..Thresholds.MAX_SAMPLE_GAP_MS
+
+            if (!calculable) {
+                closeRun()
+                continue
+            }
+
+            val angleRate = abs(steerAfter - steerBefore) / (dtMs / 1000f)
+            if (angleRate > Thresholds.HARSH_STEER_DEG_PER_SEC) {
+                val start = runStartMs
+                if (start != null && previous.timestampMs == runEndMs) {
+                    runMaxRate = maxOf(runMaxRate, angleRate)
+                } else {
+                    closeRun()
+                    runStartMs = previous.timestampMs
+                    runMaxRate = angleRate
+                }
+                runEndMs = current.timestampMs
+            } else {
+                closeRun()
+            }
+        }
+        closeRun()
+
+        return events
+    }
+
+    /**
+     * 조향이 연속된 구간마다 기준점을 잡고, 기준점 대비 30도 이상 벌어지는 순간
+     * 그 구간의 방향지시등이 계속 OFF였는지 확인한다.
+     *
+     * 한 번 기록하면 기준점을 현재 값으로 옮겨 같은 조향 동작을 중복 계산하지 않는다.
+     */
+    private fun detectMissingTurnSignal(samples: List<DrivingSample>): List<DrivingEvent> {
+        val events = mutableListOf<DrivingEvent>()
+
+        var anchorSteer: Float? = null
+        var signalOnInSegment = false
+        var signalUnknownInSegment = false
+
+        fun resetSegment() {
+            anchorSteer = null
+            signalOnInSegment = false
+            signalUnknownInSegment = false
+        }
+
+        for (sample in samples) {
+            val steer = sample.steeringDeg
+            if (steer == null) {
+                resetSegment()
+                continue
+            }
+            if (anchorSteer == null) {
+                anchorSteer = steer
+                signalOnInSegment = false
+                signalUnknownInSegment = false
+            }
+
+            when (sample.turnSignal) {
+                TurnSignal.LEFT, TurnSignal.RIGHT -> signalOnInSegment = true
+                TurnSignal.OFF -> Unit
+                null -> signalUnknownInSegment = true
+            }
+
+            val anchor = anchorSteer ?: continue
+            if (abs(steer - anchor) >= Thresholds.MISSING_SIGNAL_STEER_DEG) {
+                if (!signalOnInSegment && !signalUnknownInSegment) {
+                    events += DrivingEvent(
+                        type = DrivingEventType.MISSING_TURN_SIGNAL,
+                        atMs = sample.timestampMs,
+                        value = abs(steer - anchor),
+                        confidence = Confidence.MEASURED,
+                    )
+                }
+                anchorSteer = steer
+                signalOnInSegment = false
+                signalUnknownInSegment = false
+            }
+        }
+        return events
     }
 
     private fun detectAcceleration(samples: List<DrivingSample>): List<DrivingEvent> {
