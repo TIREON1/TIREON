@@ -43,6 +43,12 @@ fun TireonApp(
     val driving by drivingViewModel.uiState.collectAsStateWithLifecycle()
     val homeState by homeViewModel.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val launchPractice: () -> Unit = {
+        context.startActivity(
+            android.content.Intent(context, ai.tireon.app.practice.PracticeActivity::class.java),
+        )
+    }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = WindowLayoutPolicy.of(maxWidth.value.toInt())
@@ -86,6 +92,7 @@ fun TireonApp(
                         driving = driving,
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
+                        onStartPractice = launchPractice,
                     )
                 }
             }
@@ -119,6 +126,7 @@ fun TireonApp(
                         driving = driving,
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
+                        onStartPractice = launchPractice,
                     )
                 }
             }
@@ -133,6 +141,7 @@ private fun TireonNavGraph(
     driving: ai.tireon.app.driving.DrivingUiState,
     homeState: HomeUiState,
     drivingViewModel: DrivingViewModel,
+    onStartPractice: () -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -143,19 +152,12 @@ private fun TireonNavGraph(
                 state = homeState,
                 driving = driving,
                 layout = layout,
-                onStartPractice = {
-                    navController.navigate(TireonDestination.PRACTICE.route) {
-                        launchSingleTop = true
-                    }
-                },
+                onStartPractice = onStartPractice,
                 onRefresh = drivingViewModel::refresh,
             )
         }
         composable(TireonDestination.PRACTICE.route) {
-            PlaceholderScreen(
-                title = stringResource(R.string.practice_title),
-                description = stringResource(R.string.practice_description),
-            )
+            PracticeEntryScreen(onStartPractice = onStartPractice)
         }
         composable(TireonDestination.REPORT.route) {
             PlaceholderScreen(

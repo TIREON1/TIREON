@@ -18,4 +18,12 @@
     <string name="report_description">주행 기록과 코칭을 확인합니다.</string>
     <string name="settings_title">설정</string>
     <string name="settings_description">차량 정보와 안전 고지를 확인합니다.</string>
+
+    <string name="practice_mission_name">부드러운 출발</string>
+    <string name="practice_mission_description">급가속 없이 부드럽게 출발하는 연습입니다.</string>
+    <string name="practice_elapsed">%1$d초</string>
+    <string name="practice_sample_count">수집한 신호 %1$d개</string>
+    <string name="practice_event_count">기록된 이벤트 %1$d건</string>
+    <string name="action_stop">연습 종료</string>
+    <string name="action_close">닫기</string>
 </resources>
