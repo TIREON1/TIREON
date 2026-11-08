@@ -24,6 +24,7 @@ import ai.tireon.app.R
  */
 @Composable
 fun PracticeScreen(
+    mission: MissionDisplay,
     state: PracticeSessionState,
     summary: PracticeSummary?,
     speedText: String?,
@@ -34,6 +35,7 @@ fun PracticeScreen(
 ) {
     when {
         state.phase == PracticePhase.READY -> ReadyContent(
+            mission = mission,
             onStart = onStart,
             modifier = modifier,
         )
@@ -59,7 +61,11 @@ fun PracticeScreen(
 }
 
 @Composable
-private fun ReadyContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
+private fun ReadyContent(
+    mission: MissionDisplay,
+    onStart: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -68,12 +74,12 @@ private fun ReadyContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.practice_mission_name),
+            text = stringResource(mission.nameResId),
             style = MaterialTheme.typography.headlineLarge,
             textAlign = TextAlign.Center,
         )
         Text(
-            text = stringResource(R.string.practice_mission_description),
+            text = stringResource(mission.descriptionResId),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -161,9 +167,32 @@ private fun SummaryContent(
                     textAlign = TextAlign.Center,
                 )
                 summary?.let {
+                    val missionLabel = when (it.missionSuccess) {
+                        true -> stringResource(R.string.mission_success)
+                        false -> stringResource(R.string.mission_failed)
+                        null -> null
+                    }
+                    if (missionLabel != null) {
+                        Text(
+                            text = missionLabel,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (it.missionSuccess == true) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            },
+                        )
+                    }
+                    it.missionDetail?.let { detail ->
+                        Text(
+                            text = detail,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                     Text(
                         text = stringResource(R.string.practice_event_count, it.eventCount),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }

@@ -125,6 +125,32 @@ fs min:10.0, fs max:20.0
 에뮬레이터 UI를 직접 조작하거나, 계측 테스트(`androidTest`)로 상태 전이를
 검증하는 편이 낫습니다. `adb input`은 멀티윈도우 환경에서 신뢰할 수 없습니다.
 
+## 계측 테스트 환경 특성
+
+계측 테스트를 도입하면서 확인한 에뮬레이터 특성입니다.
+
+### 간헐 실패
+
+`connectedDebugAndroidTest` 전체 실행에서 두 종류의 실패가 가끔 나타납니다.
+
+| 실패 | 메시지 | 원인 |
+|---|---|---|
+| 액티비티 미전환 | `Activity never becomes requested state` | 부팅 직후 또는 부하가 높을 때 |
+| Compose 계층 없음 | `No compose hierarchies found in the app` | 같은 원인으로 보임 |
+
+두 경우 모두 **단독 실행이나 재실행에서 통과**합니다. 코드 문제가 아니라 에뮬레이터
+응답 지연입니다.
+
+대응:
+- 부팅 완료(`sys.boot_completed=1`)를 확인한 뒤 실행합니다.
+- 한 번 실패하면 재실행해 확인합니다.
+- CI에 넣을 때는 재시도 설정이 필요합니다.
+
+### 터치 주입 대신 계측 테스트를 쓰는 이유
+
+`adb shell input tap`은 Pleos 멀티윈도우 환경에서 앱에 전달되지 않습니다. 계측
+테스트는 Compose 런타임 안에서 직접 상호작용하므로 이 제약을 받지 않습니다.
+
 ## 방법
 
 1. `:pleos`에 `SignalProbe`와 `LocationProbe`를 두고 Vehicle SDK 신호 검증

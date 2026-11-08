@@ -31,4 +31,18 @@
     <string name="report_score">%1$d점</string>
     <string name="report_no_score">점수를 내지 못했어요</string>
     <string name="report_save_failed">기록을 저장하지 못했어요</string>
+
+    <string name="mission_smooth_start_name">부드러운 출발</string>
+    <string name="mission_smooth_start_description">급가속 없이 부드럽게 출발하는 연습입니다.</string>
+    <string name="mission_smooth_stop_name">부드러운 정지</string>
+    <string name="mission_smooth_stop_description">급제동 없이 미리 브레이크를 밟아 정지합니다.</string>
+    <string name="mission_reverse_sense_name">후진 감각</string>
+    <string name="mission_reverse_sense_description">후진 기어로 3초 이상 유지하며 핸들 조작을 익힙니다.</string>
+    <string name="mission_turn_signal_name">깜빡이 습관</string>
+    <string name="mission_turn_signal_description">핸들을 돌리기 전에 방향지시등을 켭니다.</string>
+    <string name="mission_steady_speed_name">정속 유지</string>
+    <string name="mission_steady_speed_description">속도를 일정하게 유지하는 감각을 익힙니다.</string>
+    <string name="mission_success">목표 달성</string>
+    <string name="mission_failed">다시 해볼까요</string>
+    <string name="practice_select_mission">연습할 미션을 골라주세요</string>
 </resources>

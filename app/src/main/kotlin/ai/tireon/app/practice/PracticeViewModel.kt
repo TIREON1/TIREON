@@ -8,6 +8,9 @@ import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.coach.CoachMessages
 import ai.tireon.core.coach.SpeechPolicy
+import ai.tireon.core.mission.MissionEvaluator
+import ai.tireon.core.mission.MissionResult
+import ai.tireon.core.mission.PracticeMission
 import ai.tireon.core.report.SessionRecordFactory
 import ai.tireon.core.report.SessionRepository
 import ai.tireon.pleos.coach.CoachSpeaker
@@ -28,6 +31,7 @@ import kotlinx.coroutines.launch
  * [ScoreCalculator])에 맡기고 이 클래스는 흐름만 관리한다.
  */
 class PracticeViewModel(
+    private val mission: PracticeMission,
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
     private val repository: SessionRepository,
@@ -124,7 +128,8 @@ class PracticeViewModel(
         )
         persist(result, events, distanceKm)
 
-        val summary = PracticeSummary.from(result, events)
+        val missionResult = MissionEvaluator().evaluate(mission, samples, events)
+        val summary = PracticeSummary.from(result, events, missionResult)
         speakSummary(result, events)
         return summary
     }
@@ -190,6 +195,7 @@ class PracticeViewModel(
     }
 
     class Factory(
+        private val mission: PracticeMission,
         private val signalSource: PleosSignalSource,
         private val restrictionMonitor: RestrictionMonitor,
         private val repository: SessionRepository,
@@ -197,7 +203,7 @@ class PracticeViewModel(
     ) : androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            PracticeViewModel(signalSource, restrictionMonitor, repository, speaker) as T
+            PracticeViewModel(mission, signalSource, restrictionMonitor, repository, speaker) as T
     }
 
     private companion object {
