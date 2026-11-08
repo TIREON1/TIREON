@@ -45,4 +45,9 @@
     <string name="mission_success">목표 달성</string>
     <string name="mission_failed">다시 해볼까요</string>
     <string name="practice_select_mission">연습할 미션을 골라주세요</string>
+
+    <string name="driving_session_title">주행 기록</string>
+    <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 주행 중에는 화면이 꺼집니다.</string>
+    <string name="driving_session_start">주행 기록 시작</string>
+    <string name="action_stop_driving">주행 종료</string>
 </resources>
