@@ -9,4 +9,15 @@
     -->
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
 
+    <!--
+      차속(PERF_VEHICLE_SPEED)은 Pleos SDK에 없고 AAOS 표준 API로 읽는다.
+      실제 조회 API는 CAR_SPEED를 요구한다(실측: getProperty SecurityException).
+      CAR_POWERTRAIN은 기어(GEAR_SELECTION) 쪽에 필요하다.
+    -->
+    <uses-permission android:name="android.car.permission.CAR_SPEED" />
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+
+    <!-- 방향지시등(TurnSignal) 조회에 필요하다. -->
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+
 </manifest>

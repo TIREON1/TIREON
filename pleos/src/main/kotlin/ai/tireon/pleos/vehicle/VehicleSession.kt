@@ -1,7 +1,11 @@
 package ai.tireon.pleos.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
+import ai.pleos.playground.vehicle.api.Brake
+import ai.pleos.playground.vehicle.api.Gear
 import ai.pleos.playground.vehicle.api.Odometer
+import ai.pleos.playground.vehicle.api.SteeringWheel
+import ai.pleos.playground.vehicle.api.TurnSignal
 import ai.pleos.playground.vehicle.api.model.capability.AccessType
 import android.content.Context
 
@@ -37,14 +41,34 @@ class VehicleSession(context: Context) {
     }
 
     /** 세션이 초기화된 경우에만 odometer 도메인 객체를 반환한다. */
-    fun odometer(): VehicleResult<Odometer> {
+    fun odometer(): VehicleResult<Odometer> = domain(OPERATION_ODOMETER) { vehicle.getOdometer() }
+
+    /** 세션이 초기화된 경우에만 gear 도메인 객체를 반환한다. */
+    fun gear(): VehicleResult<Gear> = domain(OPERATION_GEAR) { vehicle.getGear() }
+
+    /** 세션이 초기화된 경우에만 brake 도메인 객체를 반환한다. */
+    fun brake(): VehicleResult<Brake> = domain(OPERATION_BRAKE) { vehicle.getBrake() }
+
+    /** 세션이 초기화된 경우에만 steeringWheel 도메인 객체를 반환한다. */
+    fun steeringWheel(): VehicleResult<SteeringWheel> =
+        domain(OPERATION_STEERING) { vehicle.getSteeringWheel() }
+
+    /** 세션이 초기화된 경우에만 turnSignal 도메인 객체를 반환한다. */
+    fun turnSignal(): VehicleResult<TurnSignal> =
+        domain(OPERATION_TURN_SIGNAL) { vehicle.getTurnSignal() }
+
+    private fun <T> domain(operation: String, obtain: () -> T): VehicleResult<T> {
         if (!initialized) {
             return VehicleResult.Failure(
-                OPERATION_ODOMETER,
+                operation,
                 IllegalStateException("VehicleSession이 초기화되지 않았습니다."),
             )
         }
-        return VehicleResult.Success(vehicle.getOdometer())
+        return try {
+            VehicleResult.Success(obtain())
+        } catch (exception: Exception) {
+            VehicleResult.Failure(operation, exception)
+        }
     }
 
     /** 차량 서비스 연결을 해제한다. */
@@ -57,6 +81,10 @@ class VehicleSession(context: Context) {
     companion object {
         const val OPERATION_INITIALIZE = "initialize"
         const val OPERATION_ODOMETER = "odometer"
+        const val OPERATION_GEAR = "gear"
+        const val OPERATION_BRAKE = "brake"
+        const val OPERATION_STEERING = "steeringWheel"
+        const val OPERATION_TURN_SIGNAL = "turnSignal"
     }
 }
 
