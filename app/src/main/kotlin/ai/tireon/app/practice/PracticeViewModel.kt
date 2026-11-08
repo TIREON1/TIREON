@@ -7,6 +7,7 @@ import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.coach.CoachMessages
+import ai.tireon.core.coach.LiveCoach
 import ai.tireon.core.coach.SpeechPolicy
 import ai.tireon.core.mission.MissionEvaluator
 import ai.tireon.core.mission.MissionResult
@@ -55,6 +56,7 @@ class PracticeViewModel(
     private var sessionStartedAtMs = 0L
     private var lastSpokenAtMs = 0L
     private var lastSpokenText: String? = null
+    private val liveCoach = LiveCoach()
 
     fun start() {
         if (_state.value.phase != PracticePhase.READY) {
@@ -83,9 +85,12 @@ class PracticeViewModel(
                 signalSource.samples(sessionActive).collect { sample ->
                     samples += sample
                     _speedKmh.value = sample.speedMps?.times(MPS_TO_KMH)
-                    if (samples.size % 5 == 0) {
-                        Log.i(TAG, "샘플 ${samples.size}개 수집")
+
+                    // 5샘플마다 새 이벤트를 확인해 즉시 안내한다.
+                    if (samples.size % LIVE_CHECK_INTERVAL == 0) {
+                        announceNewEvents()
                     }
+
                     _state.value = _state.value.tick(latestRestriction, samples.size)
                 }
             }
@@ -132,6 +137,31 @@ class PracticeViewModel(
         val summary = PracticeSummary.from(result, events, missionResult)
         speakSummary(result, events)
         return summary
+    }
+
+    /**
+     * 세션 중 새 이벤트를 음성으로 안내한다.
+     *
+     * 제한이 걸린 상태에서는 화면이 숫자 하나뿐이라 음성이 주 채널이 된다.
+     * 제한이 없을 때도 안내하되, [SpeechPolicy]가 간격과 중복을 거른다.
+     */
+    /**
+     * 세션 중 새 이벤트를 음성으로 안내한다.
+     *
+     * 제한이 걸린 상태에서는 화면이 숫자 하나뿐이라 음성이 주 채널이 된다.
+     * 제한이 없을 때도 안내하되, [SpeechPolicy]가 간격과 중복을 거른다.
+     */
+    private fun announceNewEvents() {
+        val fresh = liveCoach.newEvents(liveCoach.observe(samples))
+        if (fresh.isEmpty()) return
+
+        val text = fresh.joinToString(" ") { liveCoach.messageFor(it) }
+        val now = System.currentTimeMillis()
+        if (!SpeechPolicy.shouldSpeak(now, lastSpokenAtMs, text, lastSpokenText)) return
+
+        lastSpokenAtMs = now
+        lastSpokenText = text
+        speaker.speak(text)
     }
 
     /**
@@ -212,5 +242,8 @@ class PracticeViewModel(
     private companion object {
         const val TAG = "PracticeViewModel"
         const val MPS_TO_KMH = 3.6f
+
+        /** 실시간 코칭을 확인하는 샘플 간격. */
+        const val LIVE_CHECK_INTERVAL = 5
     }
 }
