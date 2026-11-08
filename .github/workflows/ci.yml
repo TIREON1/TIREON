@@ -77,3 +77,8 @@ jobs:
             # 서명 키가 없는 CI에서는 debug 빌드·단위 테스트·Lint로 검증한다.
             - name: Build, test and lint
               run: ./gradlew assembleDebug test lint --stacktrace
+
+            # 계측 테스트는 Pleos 에뮬레이터(arm64 전용)가 필요해 CI에서 실행할 수 없다.
+            # 대신 컴파일을 검증해 테스트 코드가 깨지는 것을 막는다.
+            - name: Compile instrumentation tests
+              run: ./gradlew assembleDebugAndroidTest --stacktrace

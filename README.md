@@ -238,6 +238,29 @@ Pleos Connect SDK 아티팩트는 `ai.pleos.playground` 그룹으로 Pleos Nexus
 3. 대상 에뮬레이터를 선택합니다.
 4. Run을 실행하여 애플리케이션을 설치하고 실행합니다.
 
+에뮬레이터는 GPU 가속을 켜고 실행합니다.
+
+```bash
+~/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1 \
+  -no-snapshot-load -no-boot-anim -gpu host
+```
+
+`-gpu swiftshader_indirect`(소프트웨어 렌더링)를 쓰면 차량 화면의 3D 렌더링이
+CPU로 돌아 에뮬레이터가 느려집니다. 계측 테스트도 실패합니다. `-gpu host`를
+사용하면 Metal 가속이 적용되어 쾌적하게 동작합니다.
+
+### 7.4.1 계측 테스트
+
+계측 테스트는 Pleos 에뮬레이터에서만 실행됩니다. Pleos 시스템 이미지는 arm64
+전용이고 공개 배포되지 않아 CI에서 실행할 수 없습니다. 로컬에서 실행합니다.
+
+```bash
+# 에뮬레이터가 실행 중이어야 합니다
+./gradlew :app:connectedDebugAndroidTest
+```
+
+CI는 계측 테스트를 실행하지 않고 컴파일만 검증합니다.
+
 ### 7.5 빌드
 
 Gradle Wrapper를 사용하여 빌드합니다. JDK 21이 필요합니다.
