@@ -17,6 +17,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="ai.tireon.app.practice.PracticeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TIREON">
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+        </activity>
     </application>
 
 </manifest>
