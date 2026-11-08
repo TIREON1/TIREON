@@ -12,15 +12,8 @@
     <string name="nav_report">리포트</string>
     <string name="nav_settings">설정</string>
 
-    <string name="practice_title">연습</string>
-    <string name="practice_description">공터에서 안전하게 주행 연습을 합니다.</string>
     <string name="report_title">리포트</string>
-    <string name="report_description">주행 기록과 코칭을 확인합니다.</string>
-    <string name="settings_title">설정</string>
-    <string name="settings_description">차량 정보와 안전 고지를 확인합니다.</string>
 
-    <string name="practice_mission_name">부드러운 출발</string>
-    <string name="practice_mission_description">급가속 없이 부드럽게 출발하는 연습입니다.</string>
     <string name="practice_elapsed">%1$d초</string>
     <string name="practice_sample_count">수집한 신호 %1$d개</string>
     <string name="practice_event_count">기록된 이벤트 %1$d건</string>
@@ -49,7 +42,6 @@
     <string name="driving_session_title">주행 기록</string>
     <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 주행 중에는 화면이 꺼집니다.</string>
     <string name="driving_session_start">주행 기록 시작</string>
-    <string name="action_stop_driving">주행 종료</string>
 
     <string name="settings_app_section">앱 정보</string>
     <string name="settings_app_version">버전</string>

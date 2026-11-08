@@ -57,11 +57,13 @@ class PracticeActivity : ComponentActivity() {
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val summary = viewModel.summary.collectAsStateWithLifecycle()
                 val speed = viewModel.speedKmh.collectAsStateWithLifecycle()
+                val saveStatus = viewModel.saveStatus.collectAsStateWithLifecycle()
 
                 PracticeScreen(
                     mission = MissionSelection.of(mission),
                     state = state.value,
                     summary = summary.value,
+                    saveStatus = saveStatus.value,
                     speedText = speed.value?.let { it.toInt().toString() },
                     onStart = viewModel::start,
                     onStop = viewModel::requestStop,

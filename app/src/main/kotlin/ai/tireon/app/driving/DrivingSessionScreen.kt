@@ -26,6 +26,7 @@ import ai.tireon.app.R
 fun DrivingSessionScreen(
     state: DrivingSessionState,
     result: DrivingSessionResult?,
+    saveStatus: ai.tireon.app.report.SaveStatus = ai.tireon.app.report.SaveStatus.idle(),
     onStart: () -> Unit,
     onStop: () -> Unit,
     onClose: () -> Unit,
@@ -37,6 +38,7 @@ fun DrivingSessionScreen(
         DrivingSessionPhase.READY -> ReadyContent(onStart = onStart, modifier = modifier)
         DrivingSessionPhase.FINISHED -> ResultContent(
             result = result,
+            saveStatus = saveStatus,
             onClose = onClose,
             modifier = modifier,
         )
@@ -72,6 +74,7 @@ private fun ReadyContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun ResultContent(
     result: DrivingSessionResult?,
+    saveStatus: ai.tireon.app.report.SaveStatus,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -112,6 +115,13 @@ private fun ResultContent(
                     )
                 }
             }
+        }
+        saveStatus.message?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
             Text(text = stringResource(R.string.action_close))

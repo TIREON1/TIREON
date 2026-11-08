@@ -3,6 +3,7 @@ package ai.tireon.app.practice
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ai.tireon.core.analysis.DistanceEstimator
 import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
@@ -44,6 +45,10 @@ class PracticeViewModel(
 
     private val _summary = MutableStateFlow<PracticeSummary?>(null)
     val summary: StateFlow<PracticeSummary?> = _summary.asStateFlow()
+
+    /** 저장 결과. 실패하면 화면에 안내한다. */
+    private val _saveStatus = MutableStateFlow(ai.tireon.app.report.SaveStatus.idle())
+    val saveStatus: StateFlow<ai.tireon.app.report.SaveStatus> = _saveStatus.asStateFlow()
 
     /** 현재 속도(km/h). 측정값이 없으면 null이다. */
     private val _speedKmh = MutableStateFlow<Float?>(null)
@@ -124,7 +129,7 @@ class PracticeViewModel(
 
     private fun buildSummary(): PracticeSummary {
         val events = EventDetector().detect(samples)
-        val distanceKm = estimateDistanceKm(samples)
+        val distanceKm = DistanceEstimator.estimateKm(samples)
         val result: ScoreResult = ScoreCalculator().calculate(
             events = events,
             distanceKm = distanceKm,
@@ -198,34 +203,12 @@ class PracticeViewModel(
             missionResult = missionResult,
         )
         viewModelScope.launch {
-            repository.save(record).onFailure {
-                Log.e(TAG, "세션 기록 저장 실패", it)
-            }
+            val result = repository.save(record)
+            result.onFailure { Log.e(TAG, "세션 기록 저장 실패", it) }
+            _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
         }
     }
 
-    /**
-     * 거리를 속도 적분으로 추정한다.
-     *
-     * Pleos Odometer는 누적 거리만 주고 트립 거리를 주지 않는다. 속도가 없는
-     * 구간은 건너뛴다.
-     */
-    private fun estimateDistanceKm(validSamples: List<DrivingSample>): Float {
-        var meters = 0.0
-        var counted = 0
-
-        for (index in 1 until validSamples.size) {
-            val previous = validSamples[index - 1]
-            val current = validSamples[index]
-            val speed = current.speedMps ?: continue
-            val dtMs = current.timestampMs - previous.timestampMs
-            if (dtMs <= 0) continue
-            meters += speed * (dtMs / 1000.0)
-            counted++
-        }
-
-        return if (counted == 0) 0f else (meters / 1000.0).toFloat()
-    }
 
     class Factory(
         private val mission: PracticeMission,
