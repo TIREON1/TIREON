@@ -1,6 +1,7 @@
 package ai.tireon.app.practice
 
 import ai.tireon.core.analysis.InsufficientReason
+import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.DrivingEvent
 
@@ -13,23 +14,48 @@ data class PracticeSummary(
     val scoreText: String?,
     val message: String,
     val eventCount: Int,
+    /** 미션 달성 여부. 판정 불가면 null이다. */
+    val missionSuccess: Boolean? = null,
+    /** 미션 판정 상세 문구. */
+    val missionDetail: String? = null,
 ) {
     companion object {
 
-        fun from(result: ScoreResult, events: List<DrivingEvent>): PracticeSummary =
-            when (result) {
+        fun from(
+            result: ScoreResult,
+            events: List<DrivingEvent>,
+            missionResult: MissionResult? = null,
+        ): PracticeSummary {
+            val success = when (missionResult) {
+                is MissionResult.Success -> true
+                is MissionResult.Failed -> false
+                else -> null
+            }
+            val detail = when (missionResult) {
+                is MissionResult.Success -> missionResult.detail
+                is MissionResult.Failed -> missionResult.detail
+                is MissionResult.Insufficient -> missionResult.reason
+                null -> null
+            }
+
+            return when (result) {
                 is ScoreResult.Scored -> PracticeSummary(
                     scoreText = result.score.value.toString(),
                     message = "연습이 끝났어요",
                     eventCount = events.size,
+                    missionSuccess = success,
+                    missionDetail = detail,
                 )
 
                 is ScoreResult.Insufficient -> PracticeSummary(
                     scoreText = null,
                     message = messageOf(result.reason),
                     eventCount = events.size,
+                    missionSuccess = success,
+                    missionDetail = detail,
                 )
             }
+        }
 
         private fun messageOf(reason: InsufficientReason): String = when (reason) {
             InsufficientReason.DISTANCE_TOO_SHORT -> "조금 더 길게 연습하면 점수를 낼 수 있어요"
