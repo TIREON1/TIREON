@@ -173,6 +173,32 @@ class PracticeScreenTest {
     }
 
     @Test
+    fun 저장에_실패하면_안내를_보여준다() {
+        val finished = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .finish(DrivingRestriction.NONE)
+
+        val summary = PracticeSummary(scoreText = "88", message = "연습이 끝났어요", eventCount = 0)
+
+        composeRule.setContent {
+            PracticeScreen(
+                mission = mission,
+                state = finished,
+                summary = summary,
+                saveStatus = ai.tireon.app.report.SaveStatus.from(
+                    Result.failure(IllegalStateException("disk full")),
+                ),
+                speedText = null,
+                onStart = {},
+                onStop = {},
+                onClose = {},
+            )
+        }
+
+        composeRule.onNodeWithText("기록을 저장하지 못했어요").assertIsDisplayed()
+    }
+
+    @Test
     fun 점수가_없는_완료_상태는_사유를_보여준다() {
         val finished = PracticeSessionState.initial()
             .start(DrivingRestriction.NONE)

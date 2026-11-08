@@ -1,5 +1,6 @@
 package ai.tireon.app.driving
 
+import ai.tireon.core.analysis.DistanceEstimator
 import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
@@ -48,6 +49,10 @@ class DrivingSessionViewModel(
 
     private val _result = MutableStateFlow<DrivingSessionResult?>(null)
     val result: StateFlow<DrivingSessionResult?> = _result.asStateFlow()
+
+    /** 저장 결과. 실패하면 화면에 안내한다. */
+    private val _saveStatus = MutableStateFlow(ai.tireon.app.report.SaveStatus.idle())
+    val saveStatus: StateFlow<ai.tireon.app.report.SaveStatus> = _saveStatus.asStateFlow()
 
     private val sessionActive = MutableStateFlow(false)
     private val samples = mutableListOf<DrivingSample>()
@@ -105,7 +110,7 @@ class DrivingSessionViewModel(
 
     private fun buildResult(): DrivingSessionResult {
         val events = EventDetector().detect(samples)
-        val distanceKm = estimateDistanceKm(samples)
+        val distanceKm = DistanceEstimator.estimateKm(samples)
         val durationSec = _state.value.sampleCount
 
         val scoreResult = ScoreCalculator().calculate(
@@ -159,29 +164,12 @@ class DrivingSessionViewModel(
             events = events,
         )
         viewModelScope.launch {
-            repository.save(record).onFailure {
-                Log.e(TAG, "주행 기록 저장 실패", it)
-            }
+            val result = repository.save(record)
+            result.onFailure { Log.e(TAG, "주행 기록 저장 실패", it) }
+            _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
         }
     }
 
-    /** 거리를 속도 적분으로 추정한다. Pleos는 트립 거리를 주지 않는다. */
-    private fun estimateDistanceKm(validSamples: List<DrivingSample>): Float {
-        var meters = 0.0
-        var counted = 0
-
-        for (index in 1 until validSamples.size) {
-            val previous = validSamples[index - 1]
-            val current = validSamples[index]
-            val speed = current.speedMps ?: continue
-            val dtMs = current.timestampMs - previous.timestampMs
-            if (dtMs <= 0) continue
-            meters += speed * (dtMs / 1000.0)
-            counted++
-        }
-
-        return if (counted == 0) 0f else (meters / 1000.0).toFloat()
-    }
 
     class Factory(
         private val signalSource: PleosSignalSource,

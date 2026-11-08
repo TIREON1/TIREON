@@ -27,6 +27,7 @@ fun PracticeScreen(
     mission: MissionDisplay,
     state: PracticeSessionState,
     summary: PracticeSummary?,
+    saveStatus: ai.tireon.app.report.SaveStatus = ai.tireon.app.report.SaveStatus.idle(),
     speedText: String?,
     onStart: () -> Unit,
     onStop: () -> Unit,
@@ -54,6 +55,7 @@ fun PracticeScreen(
 
         else -> SummaryContent(
             summary = summary,
+            saveStatus = saveStatus,
             onClose = onClose,
             modifier = modifier,
         )
@@ -138,6 +140,7 @@ private fun RunningContent(
 @Composable
 private fun SummaryContent(
     summary: PracticeSummary?,
+    saveStatus: ai.tireon.app.report.SaveStatus,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -196,6 +199,13 @@ private fun SummaryContent(
                     )
                 }
             }
+        }
+        saveStatus.message?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
             Text(text = stringResource(R.string.action_close))

@@ -46,10 +46,12 @@ class DrivingSessionActivity : ComponentActivity() {
                 )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val result = viewModel.result.collectAsStateWithLifecycle()
+                val saveStatus = viewModel.saveStatus.collectAsStateWithLifecycle()
 
                 DrivingSessionScreen(
                     state = state.value,
                     result = result.value,
+                    saveStatus = saveStatus.value,
                     onStart = viewModel::start,
                     onStop = viewModel::requestStop,
                     onClose = { finish() },
