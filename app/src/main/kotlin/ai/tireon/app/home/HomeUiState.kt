@@ -16,6 +16,10 @@ data class HomeUiState(
     val scoreText: String?,
     val statusText: String,
     val hasScore: Boolean,
+    /** 추천 미션. 근거가 없으면 null이다. */
+    val recommendedMission: ai.tireon.core.mission.PracticeMission? = null,
+    /** 추천 이유 문구. */
+    val recommendReason: String? = null,
 ) {
     companion object {
 

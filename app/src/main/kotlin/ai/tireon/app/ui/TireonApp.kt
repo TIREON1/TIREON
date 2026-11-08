@@ -117,9 +117,7 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
-                        onStartPractice = {
-                            launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
-                        },
+                        onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
                     )
@@ -157,9 +155,7 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
-                        onStartPractice = {
-                            launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
-                        },
+                        onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
                     )
@@ -178,7 +174,7 @@ private fun TireonNavGraph(
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
     settingsInfo: ai.tireon.app.settings.SettingsInfo,
-    onStartPractice: () -> Unit,
+    onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
     onStartDriving: () -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
 ) {

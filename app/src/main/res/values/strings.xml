@@ -49,4 +49,5 @@
     <string name="settings_connection">연결 상태</string>
     <string name="settings_vin">차대번호 (VIN)</string>
     <string name="settings_safety_section">안전 고지</string>
+    <string name="home_recommend_title">추천 연습</string>
 </resources>
