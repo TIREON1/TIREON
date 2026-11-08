@@ -25,6 +25,11 @@
                 android:name="distractionOptimized"
                 android:value="true" />
         </activity>
+        <!-- 주행 세션은 DO를 선언하지 않는다. 주행 중 플랫폼이 자동으로 가린다. -->
+        <activity
+            android:name="ai.tireon.app.driving.DrivingSessionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TIREON" />
     </application>
 
 </manifest>

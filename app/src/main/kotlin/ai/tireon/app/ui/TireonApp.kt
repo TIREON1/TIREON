@@ -59,6 +59,11 @@ fun TireonApp(
             ai.tireon.app.practice.PracticeActivity.intent(context, mission),
         )
     }
+    val launchDriving: () -> Unit = {
+        context.startActivity(
+            android.content.Intent(context, ai.tireon.app.driving.DrivingSessionActivity::class.java),
+        )
+    }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = WindowLayoutPolicy.of(maxWidth.value.toInt())
@@ -106,6 +111,7 @@ fun TireonApp(
                         onStartPractice = {
                             launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
                         },
+                        onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
                     )
                 }
@@ -144,6 +150,7 @@ fun TireonApp(
                         onStartPractice = {
                             launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
                         },
+                        onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
                     )
                 }
@@ -161,6 +168,7 @@ private fun TireonNavGraph(
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
     onStartPractice: () -> Unit,
+    onStartDriving: () -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
 ) {
     NavHost(
@@ -173,6 +181,7 @@ private fun TireonNavGraph(
                 driving = driving,
                 layout = layout,
                 onStartPractice = onStartPractice,
+                onStartDriving = onStartDriving,
                 onRefresh = drivingViewModel::refresh,
             )
         }

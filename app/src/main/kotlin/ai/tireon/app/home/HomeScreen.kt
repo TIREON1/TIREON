@@ -32,6 +32,7 @@ fun HomeScreen(
     driving: DrivingUiState,
     layout: WindowLayout,
     onStartPractice: () -> Unit,
+    onStartDriving: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -52,6 +53,12 @@ fun HomeScreen(
             ) {
                 DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
                 Button(
+                    onClick = onStartDriving,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = stringResource(R.string.driving_session_start))
+                }
+                Button(
                     onClick = onStartPractice,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -69,6 +76,12 @@ fun HomeScreen(
         ) {
             ScoreCard(state = state, modifier = Modifier.fillMaxWidth())
             DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
+            Button(
+                onClick = onStartDriving,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.driving_session_start))
+            }
             Button(
                 onClick = onStartPractice,
                 modifier = Modifier.fillMaxWidth(),
