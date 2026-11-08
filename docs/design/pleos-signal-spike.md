@@ -129,40 +129,53 @@ fs min:10.0, fs max:20.0
 
 계측 테스트를 도입하면서 확인한 에뮬레이터 특성입니다.
 
-### 근본 원인: Driving View 렌더링 부하
+### 근본 원인: GPU 모드 선택 실수
 
-간헐 실패의 원인은 에뮬레이터 부하입니다. Pleos의 Driving View(`ai.umos.drivingview`)가
-3D 화면을 계속 렌더링해 GPU 컴포저가 CPU를 96%까지 점유합니다. 그 상태에서는
+계측 테스트의 간헐 실패는 **에뮬레이터 GPU 모드** 때문이었습니다.
+
+처음에는 `-gpu swiftshader_indirect`(소프트웨어 렌더링)로 실행했습니다. 호스트에
+Metal GPU가 있는데도 쓰지 않은 것이 원인이었습니다. 소프트웨어 렌더링에서는
+Pleos의 Driving View 3D 렌더링이 전부 CPU로 돌아 GPU 컴포저가 96%를 점유하고,
 테스트용 액티비티가 RESUMED로 전환되지 못합니다.
 
-측정:
+측정 비교:
+
+| GPU 모드 | GPU 컴포저 | idle | 계측 테스트 |
+|---|---|---|---|
+| `swiftshader_indirect` | 96% | 64% | 2~6개 산발 실패 |
+| `host` | 7.6% | 212% | 24개 전부 통과 |
+
+`host` 모드에서 실제 렌더러:
+
 ```
-정상 상태:  400%cpu 중 360% idle
-Driving View 실행 중: 400%cpu 중 64% idle, 컴포저 96%, drivingview 64%
+GLES: Android Emulator OpenGL ES Translator (Apple M5)
+      OpenGL ES 3.0 (4.1 Metal - 91.7)
 ```
 
-대응: 계측 테스트 전에 `adb shell pm disable-user --user 10 ai.umos.drivingview`로
-Driving View를 잠시 끕니다. 테스트 후 `pm enable`로 되돌립니다.
+**에뮬레이터 실행 명령:**
+
+```bash
+emulator -avd Pleos_Connect_v2.1 -gpu host
+```
+
+`swiftshader_indirect`는 쓰지 않습니다. `pm disable-user`로 Driving View를 끄는
+우회도 필요 없습니다. GPU가 병목이 아니게 되면 3D 씬이 돌아도 테스트가 통과합니다.
 
 화면 자체를 끄면(`KEYCODE_SLEEP`) 액티비티가 RESUMED가 될 수 없어 테스트가 전부
-실패합니다. 화면은 켜 두고 Driving View만 정지해야 합니다.
+실패합니다. 화면은 켜 두어야 합니다.
 
-### 간헐 실패
+### 실패 메시지 두 종류
 
-`connectedDebugAndroidTest` 전체 실행에서 두 종류의 실패가 가끔 나타납니다.
+GPU 모드를 잘못 선택했을 때 나타나는 메시지입니다. `host` 모드로 바꾸면 발생하지
+않습니다.
 
-| 실패 | 메시지 | 원인 |
-|---|---|---|
-| 액티비티 미전환 | `Activity never becomes requested state` | 부팅 직후 또는 부하가 높을 때 |
-| Compose 계층 없음 | `No compose hierarchies found in the app` | 같은 원인으로 보임 |
+| 실패 | 메시지 |
+|---|---|
+| 액티비티 미전환 | `Activity never becomes requested state` |
+| Compose 계층 없음 | `No compose hierarchies found in the app` |
 
-두 경우 모두 **단독 실행이나 재실행에서 통과**합니다. 코드 문제가 아니라 에뮬레이터
-응답 지연입니다.
-
-대응:
-- 부팅 완료(`sys.boot_completed=1`)를 확인한 뒤 실행합니다.
-- 한 번 실패하면 재실행해 확인합니다.
-- CI에 넣을 때는 재시도 설정이 필요합니다.
+`host` 모드에서 24개 전체를 실행해 전부 통과하는 것을 확인했습니다. 재시도 설정이
+필요하지 않습니다.
 
 ### 터치 주입 대신 계측 테스트를 쓰는 이유
 
