@@ -1,20 +1,19 @@
 package ai.tireon.app.practice
 
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import ai.tireon.core.analysis.EventDetector
-import ai.tireon.core.analysis.InsufficientReason
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.DrivingSample
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.PleosSignalSource
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -41,13 +40,15 @@ class PracticeViewModel(
     private val sessionActive = MutableStateFlow(false)
     private val samples = mutableListOf<DrivingSample>()
     private var sessionJob: Job? = null
-
-    /** 최신 제한 상태. 콜백이 오기 전에는 null이다. */
     private var latestRestriction: DrivingRestriction? = null
 
     fun start() {
-        if (_state.value.phase != PracticePhase.READY) return
+        if (_state.value.phase != PracticePhase.READY) {
+            Log.i(TAG, "start 무시: phase=${_state.value.phase}")
+            return
+        }
 
+        Log.i(TAG, "세션 시작")
         _summary.value = null
         _speedKmh.value = null
         samples.clear()
@@ -58,6 +59,7 @@ class PracticeViewModel(
         sessionJob = viewModelScope.launch {
             launch {
                 restrictionMonitor.observe().collect { restriction ->
+                    Log.i(TAG, "제한 상태: $restriction")
                     latestRestriction = restriction
                     _state.value = _state.value.tick(restriction, samples.size)
                 }
@@ -66,6 +68,9 @@ class PracticeViewModel(
                 signalSource.samples(sessionActive).collect { sample ->
                     samples += sample
                     _speedKmh.value = sample.speedMps?.times(MPS_TO_KMH)
+                    if (samples.size % 5 == 0) {
+                        Log.i(TAG, "샘플 ${samples.size}개 수집")
+                    }
                     _state.value = _state.value.tick(latestRestriction, samples.size)
                 }
             }
@@ -73,11 +78,12 @@ class PracticeViewModel(
     }
 
     fun requestStop() {
+        Log.i(TAG, "정지 요청: phase=${_state.value.phase}")
         if (_state.value.phase != PracticePhase.RUNNING) return
 
         val finished = _state.value.finish(latestRestriction)
         if (finished.phase != PracticePhase.FINISHED) {
-            // 제한이 남아 있으면 요약을 노출하지 않는다.
+            Log.i(TAG, "제한이 남아 있어 요약 보류: ${finished.restriction}")
             _state.value = finished
             return
         }
@@ -87,6 +93,7 @@ class PracticeViewModel(
         sessionJob = null
         _state.value = finished
         _summary.value = buildSummary()
+        Log.i(TAG, "세션 종료, 요약=${_summary.value}")
     }
 
     override fun onCleared() {
@@ -96,19 +103,14 @@ class PracticeViewModel(
     }
 
     private fun buildSummary(): PracticeSummary {
-        val validSamples = samples
-        val events = EventDetector().detect(validSamples)
-
-        val distanceKm = estimateDistanceKm(validSamples)
-        val durationSec = _state.value.elapsedSec
-
+        val events = EventDetector().detect(samples)
+        val distanceKm = estimateDistanceKm(samples)
         val result: ScoreResult = ScoreCalculator().calculate(
             events = events,
             distanceKm = distanceKm,
-            durationSec = durationSec,
-            sampleCount = validSamples.size,
+            durationSec = _state.value.elapsedSec,
+            sampleCount = samples.size,
         )
-
         return PracticeSummary.from(result, events)
     }
 
@@ -116,8 +118,7 @@ class PracticeViewModel(
      * 거리를 속도 적분으로 추정한다.
      *
      * Pleos Odometer는 누적 거리만 주고 트립 거리를 주지 않는다. 속도가 없는
-     * 구간은 건너뛴다. 추정할 수 없으면 0이 아니라 데이터 부족으로 처리되도록
-     * 아주 작은 값을 돌려준다.
+     * 구간은 건너뛴다.
      */
     private fun estimateDistanceKm(validSamples: List<DrivingSample>): Float {
         var meters = 0.0
@@ -136,10 +137,6 @@ class PracticeViewModel(
         return if (counted == 0) 0f else (meters / 1000.0).toFloat()
     }
 
-    private companion object {
-        const val MPS_TO_KMH = 3.6f
-    }
-
     class Factory(
         private val signalSource: PleosSignalSource,
         private val restrictionMonitor: RestrictionMonitor,
@@ -147,5 +144,10 @@ class PracticeViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             PracticeViewModel(signalSource, restrictionMonitor) as T
+    }
+
+    private companion object {
+        const val TAG = "PracticeViewModel"
+        const val MPS_TO_KMH = 3.6f
     }
 }
