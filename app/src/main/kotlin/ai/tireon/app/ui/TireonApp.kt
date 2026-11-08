@@ -54,9 +54,9 @@ fun TireonApp(
     val reportViewModel: ai.tireon.app.report.ReportViewModel =
         viewModel(factory = ai.tireon.app.report.ReportViewModel.Factory(repository))
     val reportState by reportViewModel.state.collectAsStateWithLifecycle()
-    val launchPractice: () -> Unit = {
+    val launchPractice: (ai.tireon.core.mission.PracticeMission) -> Unit = { mission ->
         context.startActivity(
-            android.content.Intent(context, ai.tireon.app.practice.PracticeActivity::class.java),
+            ai.tireon.app.practice.PracticeActivity.intent(context, mission),
         )
     }
 
@@ -103,7 +103,10 @@ fun TireonApp(
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
-                        onStartPractice = launchPractice,
+                        onStartPractice = {
+                            launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
+                        },
+                        onSelectMission = launchPractice,
                     )
                 }
             }
@@ -138,7 +141,10 @@ fun TireonApp(
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
-                        onStartPractice = launchPractice,
+                        onStartPractice = {
+                            launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
+                        },
+                        onSelectMission = launchPractice,
                     )
                 }
             }
@@ -155,6 +161,7 @@ private fun TireonNavGraph(
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
     onStartPractice: () -> Unit,
+    onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -170,7 +177,7 @@ private fun TireonNavGraph(
             )
         }
         composable(TireonDestination.PRACTICE.route) {
-            PracticeEntryScreen(onStartPractice = onStartPractice)
+            PracticeEntryScreen(onSelectMission = onSelectMission)
         }
         composable(TireonDestination.REPORT.route) {
             ai.tireon.app.report.ReportScreen(state = reportState)

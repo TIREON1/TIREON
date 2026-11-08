@@ -4,6 +4,9 @@ import ai.tireon.pleos.coach.PleosCoachSpeaker
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
 import ai.tireon.pleos.vehicle.VehicleSession
+import ai.tireon.core.mission.PracticeMission
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +30,10 @@ class PracticeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val mission = intent.getStringExtra(EXTRA_MISSION)
+            ?.let { name -> runCatching { PracticeMission.valueOf(name) }.getOrNull() }
+            ?: PracticeMission.SMOOTH_START
+
         val vehicleSession = VehicleSession(applicationContext)
         session = vehicleSession
         this.speaker = speaker
@@ -39,13 +46,20 @@ class PracticeActivity : ComponentActivity() {
         setContent {
             TireonTheme {
                 val viewModel: PracticeViewModel = viewModel(
-                    factory = PracticeViewModel.Factory(signalSource, restrictionMonitor, repository, speaker),
+                    factory = PracticeViewModel.Factory(
+                        mission = mission,
+                        signalSource = signalSource,
+                        restrictionMonitor = restrictionMonitor,
+                        repository = repository,
+                        speaker = speaker,
+                    ),
                 )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val summary = viewModel.summary.collectAsStateWithLifecycle()
                 val speed = viewModel.speedKmh.collectAsStateWithLifecycle()
 
                 PracticeScreen(
+                    mission = MissionSelection.of(mission),
                     state = state.value,
                     summary = summary.value,
                     speedText = speed.value?.let { it.toInt().toString() },
@@ -60,6 +74,13 @@ class PracticeActivity : ComponentActivity() {
     override fun onStop() {
         speaker?.stop()
         super.onStop()
+    }
+
+    companion object {
+        private const val EXTRA_MISSION = "ai.tireon.app.extra.MISSION"
+
+        fun intent(context: Context, mission: PracticeMission): Intent =
+            Intent(context, PracticeActivity::class.java).putExtra(EXTRA_MISSION, mission.name)
     }
 
     override fun onDestroy() {

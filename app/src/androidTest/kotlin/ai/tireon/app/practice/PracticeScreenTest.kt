@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import ai.tireon.app.R
+import ai.tireon.core.mission.PracticeMission
 import ai.tireon.pleos.restriction.DrivingRestriction
 import org.junit.Rule
 import org.junit.Test
@@ -24,6 +26,12 @@ class PracticeScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    private val mission = MissionDisplay(
+        mission = PracticeMission.SMOOTH_START,
+        nameResId = R.string.mission_smooth_start_name,
+        descriptionResId = R.string.mission_smooth_start_description,
+    )
+
     private fun setScreen(
         state: PracticeSessionState,
         summary: PracticeSummary? = null,
@@ -34,6 +42,7 @@ class PracticeScreenTest {
     ) {
         composeRule.setContent {
             PracticeScreen(
+                mission = mission,
                 state = state,
                 summary = summary,
                 speedText = speedText,
@@ -99,6 +108,68 @@ class PracticeScreenTest {
         composeRule.onNodeWithText("88").assertIsDisplayed()
         composeRule.onNodeWithText("연습이 끝났어요").assertIsDisplayed()
         composeRule.onNodeWithText("닫기").assertIsDisplayed()
+    }
+
+    @Test
+    fun 미션을_달성하면_목표_달성을_보여준다() {
+        val finished = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .tick(DrivingRestriction.NONE, sampleCount = 30)
+            .finish(DrivingRestriction.NONE)
+
+        val summary = PracticeSummary(
+            scoreText = "92",
+            message = "연습이 끝났어요",
+            eventCount = 0,
+            missionSuccess = true,
+            missionDetail = "급가속 없이 출발했어요",
+        )
+
+        setScreen(finished, summary = summary)
+
+        composeRule.onNodeWithText("목표 달성").assertIsDisplayed()
+        composeRule.onNodeWithText("급가속 없이 출발했어요").assertIsDisplayed()
+    }
+
+    @Test
+    fun 미션을_달성하지_못하면_다시_하기를_권한다() {
+        val finished = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .tick(DrivingRestriction.NONE, sampleCount = 30)
+            .finish(DrivingRestriction.NONE)
+
+        val summary = PracticeSummary(
+            scoreText = "70",
+            message = "연습이 끝났어요",
+            eventCount = 2,
+            missionSuccess = false,
+            missionDetail = "급가속이 있었어요 (2 번)",
+        )
+
+        setScreen(finished, summary = summary)
+
+        composeRule.onNodeWithText("다시 해볼까요").assertIsDisplayed()
+    }
+
+    @Test
+    fun 판정_불가면_달성_여부를_표시하지_않는다() {
+        val finished = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .finish(DrivingRestriction.NONE)
+
+        val summary = PracticeSummary(
+            scoreText = null,
+            message = "주행 데이터가 부족해요",
+            eventCount = 0,
+            missionSuccess = null,
+            missionDetail = "속도 신호를 받지 못했어요",
+        )
+
+        setScreen(finished, summary = summary)
+
+        composeRule.onAllNodesWithText("목표 달성").assertCountEquals(0)
+        composeRule.onAllNodesWithText("다시 해볼까요").assertCountEquals(0)
+        composeRule.onNodeWithText("속도 신호를 받지 못했어요").assertIsDisplayed()
     }
 
     @Test
