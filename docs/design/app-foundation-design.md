@@ -515,6 +515,8 @@ tts.speak(message.text)
 | `CAR_POWERTRAIN` 권한 심사 승인 여부 | 미확인 | GPS 미분으로 폴백 |
 | 조향각 부호 반전이 실차에서도 같은지 | 미확인 | 절댓값 임계와 방향 정규화를 유지 |
 
+| Gleo AI 연동 가능 여부 | 에뮬레이터 미지원 | Pleos 에뮬레이터 v2.1에 Gleo AI 앱 본체가 없습니다. `LLMModelProviderSerivce`만 있고 `APP_ACTION_RESPONSE` 수신자가 없습니다. 실차에서만 확인 가능 |
+
 DO 검증을 포기한 이유와 근거는
 [Pleos 신호 스파이크 결과](pleos-signal-spike.md)의 DO 검증 절에 정리했습니다.
 

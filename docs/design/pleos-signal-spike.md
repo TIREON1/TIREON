@@ -47,6 +47,96 @@ parking spaces를 제공한다고 소개되어 있습니다. 하지만 확인해
 결론은 AI 코칭을 앱 자체 구현이나 외부 API로 처리하는 것입니다.
 Gleo Interface는 추후 음성 명령 연동 옵션으로만 검토합니다.
 
+### Gleo Interface 조사 결과
+
+Gleo AI 연동 방법을 문서로 확인했습니다. 에뮬레이터에서는 검증할 수 없어
+구현은 보류합니다.
+
+**구조**
+
+```
+[운전자 음성] → [Gleo AI (LLM 내장)] → [Intent] → [TIREON 앱]
+                                            ↓
+                                    [액션 처리 후 결과]
+                                            ↓
+                              [Broadcast] → [Gleo AI가 자연어 응답 생성]
+```
+
+LLM은 Gleo AI 쪽에 있습니다. 앱은 함수만 노출하므로 API 키가 필요 없고,
+숫자 불변 가드도 필요 없습니다. LLM이 숫자를 만들지 않고 앱이 준 값을 말하기
+때문입니다.
+
+**App Schema** (`assets/schema.json`)
+
+```json
+{
+  "packageName": "ai.tireon.app",
+  "appDescription": "Driving coach that reports driving scores and practice missions.",
+  "invokeWord": "티레온",
+  "version": "0.1.0",
+  "actionCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "GET_DRIVING_SCORE",
+        "description": "Returns the most recent driving score and the top issue.",
+        "parameters": { "type": "object", "properties": {}, "required": [] },
+        "component": "service"
+      }
+    }
+  ]
+}
+```
+
+**Callback**
+
+```kotlin
+Intent("ai.pleos.playground.intent.action.APP_ACTION_RESPONSE").apply {
+    putExtra("packageName", packageName)
+    putExtra("response", responseJson)
+    sendBroadcast(this)
+}
+```
+
+`responseJson`은 다음 형식입니다.
+
+```json
+{
+  "functionName": "GET_DRIVING_SCORE",
+  "status": "success",
+  "message": "The latest driving score was retrieved.",
+  "data": "[{\"score\":85,\"topIssue\":\"harsh braking\"}]"
+}
+```
+
+**제약**
+
+| 항목 | 제약 |
+|---|---|
+| 함수 개수 | 최대 3개 |
+| 설명 언어 | 영문 필수 |
+| Callback 타임아웃 | 7초 |
+| Schema 위치 | `assets/schema.json` (파일명 고정) |
+| Schema 검토 | Pleos 측 사전 검토 필요 |
+| 상태 값 | success, asking, fail |
+| 응답 모드 | voice, beep, silent |
+
+**에뮬레이터 확인 결과: 구현 불가**
+
+| 확인 항목 | 결과 |
+|---|---|
+| Gleo AI 앱 본체 | 없음 |
+| `APP_ACTION_RESPONSE` 수신자 | 없음 (쿼리 0건) |
+| 있는 것 | `LLMModelProviderSerivce.apk` (모델 제공자 서비스만) |
+
+`ai.pleos.gleoai.model.provider`는 LLM 모델을 제공하는 서비스이고, 사용자 음성을
+받아 function calling을 수행하는 Gleo AI 앱이 아닙니다. 에뮬레이터 릴리스 노트의
+"End of support for LLM SDK"와 일치합니다.
+
+**결론:** App Schema와 Callback 코드는 준비할 수 있지만, 대화 상대가 없어 동작을
+검증할 수 없습니다. 실차에서만 확인 가능합니다.
+
+
 ## 신호 수집 계층 통합 검증
 
 `:pleos`에 신호 수집 계층을 구현한 뒤 에뮬레이터에서 실제 수집을 확인했습니다.
@@ -389,3 +479,69 @@ GPS           FusedLocation (보조)
 
 - 스파이크 코드는 검증 후 제거했습니다.
 - 재현은 이 문서의 주입 명령과 신호 소스 표로 가능합니다.
+
+## 실차 검증이 필요할 때
+
+에뮬레이터로 확인할 수 없는 항목이 남아 있습니다. 실차에서만 검증 가능한 항목과
+그에 필요한 차량을 정리합니다.
+
+### 실차에서만 확인 가능한 항목
+
+| 항목 | 에뮬레이터 결과 | 필요한 것 |
+|---|---|---|
+| `PERF_VEHICLE_SPEED` 실제 값 | 읽기 성공 | Pleos 탑재 차량 |
+| `GEAR_SELECTION` 실제 값 | 읽기 성공 | Pleos 탑재 차량 |
+| DO 태그 주행 차단 | 차단 확인됨 | 실차 재확인 권장 |
+| `CAR_SPEED` 등 권한 승인 | 에뮬레이터에서 부여 | 앱 마켓 사전 협의 |
+| 조향각 부호 | 부호 반전 확인 | 실차 동일성 확인 |
+| TTS 한국어 품질 | 미확인 | 실차 또는 에뮬레이터 청취 |
+| Gleo AI 연동 | 앱 없음 | Gleo AI 탑재 차량 |
+
+### Pleos Connect 탑재 차량 (2026년 기준)
+
+Pleos Connect는 2026년 5월 더 뉴 그랜저(GN7 PE)부터 적용되었습니다.
+
+| 브랜드 | 차종 | 시기 | 비고 |
+|---|---|---|---|
+| 현대 | 더 뉴 그랜저 (GN7 PE) | 2026.05 ~ | 최초 적용 |
+| 현대 | 아이오닉 3 | 2026 ~ | 현대 최초 공개 차량 |
+| 현대 | 디 올 뉴 팰리세이드 | 2026 ~ | |
+| 현대 | 8세대 아반떼 (CN8) | 2026 상반기 | 예정 |
+| 기아 | PV5 | 2025 ~ | 시범 적용 |
+| 기아 | 4세대 K5 | 2026 상반기 | 예정 |
+| 기아 | PV7 | 2027 ~ | 예정 |
+| 제네시스 | GV90 | 2026.09 | 예정 |
+
+**렌트 가능성이 가장 높은 차종은 더 뉴 그랜저(GN7 PE)입니다.** 2026년 5월부터
+양산되었고 국내 렌트 시장에 가장 빨리 공급됩니다. 아이오닉 3도 2026년 출시라
+시간이 지나면 렌트 가능성이 있습니다.
+
+### 실차 테스트 준비물
+
+| 항목 | 용도 |
+|---|---|
+| 노트북 + USB 케이블 | adb 연결 |
+| 앱 디버그 APK | `./gradlew assembleDebug` |
+| 권한 승인 | `adb shell pm grant` (또는 앱 마켓 승인) |
+| 안전한 장소 | 공터 또는 주차장 |
+
+**주의:** 실차에서 신호를 검증할 때는 반드시 안전한 장소에서 합니다. 주행 중
+조작은 금지하고, 동승자가 조작합니다.
+
+### 실차 검증 절차
+
+1. 앱 설치 및 권한 부여
+2. `adb logcat -s PleosSignalSource AaosSpeedReader AaosGearReader`
+3. 엔진 시동 후 기어 P에서 신호 확인
+4. 공터에서 기어 D, 저속 주행하며 속도·조향·방향지시등 확인
+5. 급제동·급가속을 의도적으로 만들어 이벤트 검출 확인
+6. TTS 재생 품질 청취
+7. Gleo AI 탑재 차량이면 "티레온 운전 점수 알려줘"로 연동 확인
+
+### 렌트 시 확인할 것
+
+렌트 예약 전에 다음을 확인하면 헛걸음을 줄일 수 있습니다.
+
+- 트림에 Pleos Connect가 포함되는지 (하위 트림은 ccNC일 수 있음)
+- Gleo AI가 활성화되어 있는지 (구독 또는 설정 필요 여부)
+- 앱 설치가 가능한지 (ADB 사이드로드 또는 마켓 접근)
