@@ -33,7 +33,7 @@ class SessionRecordFactoryTest {
         assertEquals(88, record.score)
         assertNull(record.insufficientReason)
         assertEquals(1, record.eventCounts["HARSH_BRAKE"])
-        assertEquals(1, record.schemaVersion)
+        assertEquals(DrivingSessionRecord.CURRENT_SCHEMA_VERSION, record.schemaVersion)
     }
 
     @Test

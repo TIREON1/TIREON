@@ -129,6 +129,24 @@ fs min:10.0, fs max:20.0
 
 계측 테스트를 도입하면서 확인한 에뮬레이터 특성입니다.
 
+### 근본 원인: Driving View 렌더링 부하
+
+간헐 실패의 원인은 에뮬레이터 부하입니다. Pleos의 Driving View(`ai.umos.drivingview`)가
+3D 화면을 계속 렌더링해 GPU 컴포저가 CPU를 96%까지 점유합니다. 그 상태에서는
+테스트용 액티비티가 RESUMED로 전환되지 못합니다.
+
+측정:
+```
+정상 상태:  400%cpu 중 360% idle
+Driving View 실행 중: 400%cpu 중 64% idle, 컴포저 96%, drivingview 64%
+```
+
+대응: 계측 테스트 전에 `adb shell pm disable-user --user 10 ai.umos.drivingview`로
+Driving View를 잠시 끕니다. 테스트 후 `pm enable`로 되돌립니다.
+
+화면 자체를 끄면(`KEYCODE_SLEEP`) 액티비티가 RESUMED가 될 수 없어 테스트가 전부
+실패합니다. 화면은 켜 두고 Driving View만 정지해야 합니다.
+
 ### 간헐 실패
 
 `connectedDebugAndroidTest` 전체 실행에서 두 종류의 실패가 가끔 나타납니다.

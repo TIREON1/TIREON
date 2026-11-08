@@ -93,6 +93,30 @@ private fun RecordCard(record: DrivingSessionRecord) {
                 )
             }
 
+            record.missionDetail?.let { detail ->
+                val missionLabel = when (record.missionSuccess) {
+                    true -> stringResource(R.string.mission_success)
+                    false -> stringResource(R.string.mission_failed)
+                    null -> null
+                }
+                if (missionLabel != null) {
+                    Text(
+                        text = missionLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (record.missionSuccess == true) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                    )
+                }
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             val totalEvents = record.eventCounts.values.sum()
             Text(
                 text = stringResource(R.string.practice_event_count, totalEvents),
