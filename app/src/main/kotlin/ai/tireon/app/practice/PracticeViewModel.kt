@@ -126,9 +126,9 @@ class PracticeViewModel(
             durationSec = _state.value.elapsedSec,
             sampleCount = samples.size,
         )
-        persist(result, events, distanceKm)
-
         val missionResult = MissionEvaluator().evaluate(mission, samples, events)
+        persist(result, events, distanceKm, missionResult)
+
         val summary = PracticeSummary.from(result, events, missionResult)
         speakSummary(result, events)
         return summary
@@ -155,6 +155,7 @@ class PracticeViewModel(
         result: ScoreResult,
         events: List<ai.tireon.core.driving.DrivingEvent>,
         distanceKm: Float,
+        missionResult: MissionResult,
     ) {
         val record = SessionRecordFactory.create(
             id = "session-$sessionStartedAtMs",
@@ -163,6 +164,8 @@ class PracticeViewModel(
             distanceKm = if (distanceKm > 0f) distanceKm else null,
             result = result,
             events = events,
+            mission = mission,
+            missionResult = missionResult,
         )
         viewModelScope.launch {
             repository.save(record).onFailure {
