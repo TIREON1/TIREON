@@ -47,6 +47,51 @@ parking spaces를 제공한다고 소개되어 있습니다. 하지만 확인해
 결론은 AI 코칭을 앱 자체 구현이나 외부 API로 처리하는 것입니다.
 Gleo Interface는 추후 음성 명령 연동 옵션으로만 검토합니다.
 
+## 신호 수집 계층 통합 검증
+
+`:pleos`에 신호 수집 계층을 구현한 뒤 에뮬레이터에서 실제 수집을 확인했습니다.
+
+### 결과
+
+1Hz 샘플이 정상 생성되고, 주입한 값이 그대로 반영됩니다.
+
+| 샘플 | gear | speed | steer | brake | signal |
+|---|---|---|---|---|---|
+| n=4 | DRIVE | 0.0 | 0.0 | false | OFF |
+| n=5 | DRIVE | 0.0 | 0.0 | false | LEFT |
+| n=7 | DRIVE | 12.5 | 120.0 | false | LEFT |
+| n=9 | DRIVE | 12.5 | 0.0 | true | LEFT |
+
+- 속도 12.5 m/s는 주입값 45 km/h에 해당합니다.
+- 조향 120.0은 주입값 120과 부호까지 일치합니다.
+- 기어, 브레이크, 방향지시등 모두 주입대로 바뀝니다.
+- 세션 종료 신호를 보내자 샘플이 정확히 멈췄습니다(n=20이 마지막). 리스너 해제가 동작합니다.
+
+### 검증 중 발견한 것
+
+구현 단계에서 두 가지를 실측으로 바로잡았습니다.
+
+1. **차속 권한은 `CAR_SPEED`다.** `CAR_POWERTRAIN`만 선언하면 `getProperty`가
+   `SecurityException: requires android.car.permission.CAR_SPEED`로 실패합니다.
+   스파이크에서 성공했던 것은 두 권한을 함께 선언했기 때문입니다.
+2. **기어는 Pleos SDK 대신 AAOS `GEAR_SELECTION`을 쓴다.** Pleos SDK의
+   `Gear` 도메인은 deprecated이고, 공식 안내가 "Google GEAR_SELECTION property를
+   쓰라"고 지시합니다. Pleos 문서의 API 선택 기준도 기어를 AAOS 표준 데이터로
+   분류합니다. 문서상 `GEAR_SELECTION`은 O(사용 가능)입니다.
+
+### 참고: 프로퍼티 지원 범위
+
+`dumpsys car_service`에서 확인한 차속 프로퍼티 설정입니다.
+
+```
+Property:0x11600207, PERF_VEHICLE_SPEED, access:0x1, changeMode:0x2
+fs min:10.0, fs max:20.0
+```
+
+권한이 있으면 요청 주파수 1Hz, 10Hz, 20Hz 모두 등록됩니다. 선언된 최소
+주파수는 10Hz지만 더 낮은 요청을 거부하지는 않습니다. 집계는 별도 주기로 하므로
+콜백 주기가 높아도 샘플 수는 늘지 않습니다.
+
 ## 방법
 
 1. `:pleos`에 `SignalProbe`와 `LocationProbe`를 두고 Vehicle SDK 신호 검증
@@ -67,42 +112,67 @@ adb emu geo fix -122.084 37.4252
 
 ## DO와 CarUxRestrictions 검증 결과
 
-DO(Distraction Optimization) 차단 동작을 검증하려고 별도 스파이크를 진행했습니다.
+DO(Distraction Optimization) 차단 동작을 실제 주행 상태에서 검증했습니다.
+
+### 검증 방법
+
+Virtual Console로 기어를 Drive, 속도를 45km/h로 만들어 주행 상태를 만든 뒤
+DO 선언 액티비티와 미선언 액티비티를 각각 실행했습니다. 별도 명령 없이
+`emulator_active`가 켜져 있으면 주행 상태가 유지됩니다.
+
+### 결과
+
+DO는 정상 동작합니다.
+
+| 액티비티 | DO 선언 | 주행 중 결과 |
+|---|---|---|
+| `DoProbeActivity` | `true` | 정상 실행 (`onCreate` -> `onResume`) |
+| `NoDoProbeActivity` | 없음 | 차단됨 (빈 화면) |
+| 기존 `MainActivity` | 없음 | 차단됨 ("주행 중에는 사용할 수 없습니다") |
 
 ### 확인된 것
 
-| 항목 | 결과 | 근거 |
-|---|---|---|
-| 매니페스트 메타데이터 인식 | 시스템이 읽음 | 홈스크린 로그에 `distractionOptimized: true` |
-| `CarUxRestrictionsManager` 획득 | 성공 | `uxManager=true` |
-| 리스너 등록 | 성공 | 콜백 대기 상태 |
-| `UX_CURRENT` 조회 | 성공 | `requiresDO=false active=0x0` |
-| 속도와 UX 제한의 관계 | 무관함 | 속도 40km/h 상태에서도 `requiresDO=false` |
-
-### 확인하지 못한 것
-
-DO 차단 동작은 이 에뮬레이터에서 검증할 수 없습니다.
-
-```
-ro.build.type       = user
-ro.build.flavor     = crp_avd_arm64-user
-ro.debuggable       = 0
-```
-
-Pleos 에뮬레이터 시스템 이미지는 user 빌드 단일 변형으로만 배포됩니다
-(`android-automotive/arm64-v8a`, 42dot). userdebug 이미지는 로컬에도 원격
-저장소에도 없습니다. 검증에 필요한 명령이 모두 차단됩니다.
-
-| 명령 | 결과 |
+| 항목 | 결과 |
 |---|---|
-| `cmd car_service enable-uxr` | `requires non-user build` |
-| `cmd car_service get-do-activities` | `requires non-user build` |
-| `cmd car_service inject-vhal-event` | `requires non-user build` |
-| Virtual Console 기어와 속도 주입 | `emulator_active`가 계속 false로 풀림 |
+| 매니페스트 메타데이터 인식 | 홈스크린 로그에 `distractionOptimized: true` |
+| DO 선언 액티비티 생존 | `onCreate`와 `onResume` 정상 호출 |
+| DO 미선언 액티비티 차단 | 포커스는 잡지만 빈 화면으로 대체됨 |
+| `CarUxRestrictionsManager` 획득 | 성공 |
+| UX 제한 상태 | 처음부터 활성. `Requires DO? true` |
 
-Android 문서에도 같은 조건이 적혀 있습니다. DO는 trusted source 설치이거나
-userdebug 이미지일 때만 효력이 있습니다. 이 환경은 둘 다 아닙니다.
+### 처음에 잘못 판단한 부분
 
+처음에는 `cmd car_service enable-uxr`가 `requires non-user build`로 차단되는
+것을 보고 "UX 제한을 켤 수 없으니 DO를 검증할 수 없다"고 결론지었습니다.
+
+이것이 틀렸습니다. `enable-uxr`는 제한을 강제로 켜는 명령이고, 에뮬레이터에서는
+제한이 이미 켜진 상태로 부팅됩니다. `dumpsys car_service`에 그 증거가 처음부터
+있었습니다.
+
+```
+baseline mode UXR:
+  State: unknown   num restrictions: 1
+  Requires DO?  true
+```
+
+주행 상태만 만들면 DO 동작을 그대로 시험할 수 있었습니다.
+
+### 검증이 불가능한 것
+
+`get-do-activities`와 `inject-vhal-event`는 여전히 `requires non-user build`로
+차단됩니다. 다만 DO 동작 확인에는 필요하지 않았습니다.
+
+### 대응: DO 선언과 자체 축소를 함께 둔다
+
+DO가 동작하는 것을 확인했지만, 앱이 `CarUxRestrictions`를 구독해 스스로 화면을
+축소하는 구조는 그대로 유지합니다. 이유는 두 가지입니다.
+
+1. 지역과 차량에 따라 제한 범위가 달라집니다. 플랫폼이 막아주더라도 연습
+   화면이 숫자 하나만 남기는 편이 안전합니다.
+2. 제한이 걸린 상태에서 어떤 UI를 보여줄지는 앱이 결정해야 합니다. 플랫폼은
+   액티비티 단위로 허용 여부만 판단합니다.
+
+이 로직은 순수 함수로 분리해 JVM에서 검증합니다.
 ### 대응: DO 선언과 자체 축소를 함께 둔다
 
 플랫폼이 막아주는지에 의존하지 않습니다. 앱이 `CarUxRestrictions`를 구독해

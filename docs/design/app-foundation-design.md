@@ -112,6 +112,9 @@ DO(Distraction Optimization)는 앱 전체가 아니라 액티비티 단위로 �
 `MainActivity`는 DO를 선언하지 않으므로 주행 제한이 걸리면 플랫폼이
 자동으로 가립니다. 앱이 차단 로직을 따로 구현하지 않습니다.
 
+이 동작은 에뮬레이터에서 확인했습니다. 주행 상태(Drive, 45km/h)에서
+DO 선언 액티비티는 정상 실행되고, 미선언 액티비티는 차단됩니다.
+
 ### 3.2 제한 판정
 
 속도로 UI를 판정하지 않습니다. 지역과 차량별 규정은 플랫폼이 결정합니다.
@@ -125,7 +128,11 @@ uxRestrictionsManager.registerListener { restrictions ->
 }
 ```
 
-속도는 표시용으로만 사용합니다.
+속도는 표시용으로만 사용합니다. 에뮬레이터에서 속도 45km/h 상태에도
+`requiresDO`가 속도만으로 바뀌지 않는 것을 확인했습니다.
+
+제한 상태를 확인하지 못했을 때(`null`)는 전체 UI를 띄우지 않고 최소 UI로
+처리합니다. 판단 근거가 없을 때 안전한 쪽을 택하기 위함입니다.
 
 ### 3.3 PracticeActivity 상태
 
@@ -500,8 +507,8 @@ tts.speak(message.text)
 
 | 항목 | 상태 | 대응 |
 |---|---|---|
-| 에뮬레이터에서 DO 태그가 주행 차단을 통과하는가 | 검증 불가 | Pleos 에뮬레이터는 user 빌드이고 `enable-uxr` 명령이 차단됩니다. DO 선언은 유지하고 앱이 `CarUxRestrictions`를 구독해 스스로 화면을 축소합니다. 차단 동작은 실차에서만 확인할 수 있습니다 |
-| `CarUxRestrictions` 값이 에뮬레이터에서 오는가 | 확인됨 | `CarUxRestrictionsManager` 획득과 `UX_CURRENT` 조회에 성공했습니다. 다만 제한이 걸린 상태는 재현하지 못했습니다 |
+| 에뮬레이터에서 DO 태그가 주행 차단을 통과하는가 | 확인됨 | 주행 상태(Drive, 45km/h)에서 DO 선언 액티비티는 정상 실행되고, 미선언 액티비티는 빈 화면으로 차단됩니다. 기존 `MainActivity`도 "주행 중에는 사용할 수 없습니다"로 차단됩니다 |
+| `CarUxRestrictions` 값이 에뮬레이터에서 오는가 | 확인됨 | `CarUxRestrictionsManager` 획득과 `UX_CURRENT` 조회에 성공했고, 제한 상태가 활성(`Requires DO? true`)인 것을 확인했습니다 |
 | TTS ON_DEVICE 한국어 품질 | 미확인 | 화면 문장을 주 경로로 유지 |
 | Pleos UI 가이드의 정확한 터치 타깃 dp | 미확인 | 문서 재확인 후 상수 확정 |
 | `PERF_VEHICLE_SPEED`가 실차에서도 O인지 | 미확인 | `checkCapabilities`로 감지해서 값 없음 처리 |
