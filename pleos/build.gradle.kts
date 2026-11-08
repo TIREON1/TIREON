@@ -45,8 +45,6 @@ dependencies {
     // compile classpath에 노출되지 않는다. 오류 코드 분기를 위해 명시적으로 추가한다.
     implementation(libs.pleos.vehicle.data)
 
-    // DrivingViewModel은 :app에서 직접 사용하므로 api로 노출한다.
-    api(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
