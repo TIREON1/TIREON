@@ -38,12 +38,22 @@ import ai.tireon.app.home.HomeViewModel
 @Composable
 fun TireonApp(
     drivingViewModel: DrivingViewModel = viewModel(factory = viewModelFactory()),
-    homeViewModel: HomeViewModel = viewModel(),
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory(
+        ai.tireon.app.report.SessionRepositoryProvider.get(
+            androidx.compose.ui.platform.LocalContext.current,
+        ),
+    )),
 ) {
     val driving by drivingViewModel.uiState.collectAsStateWithLifecycle()
     val homeState by homeViewModel.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val repository = androidx.compose.runtime.remember(context) {
+        ai.tireon.app.report.SessionRepositoryProvider.get(context)
+    }
+    val reportViewModel: ai.tireon.app.report.ReportViewModel =
+        viewModel(factory = ai.tireon.app.report.ReportViewModel.Factory(repository))
+    val reportState by reportViewModel.state.collectAsStateWithLifecycle()
     val launchPractice: () -> Unit = {
         context.startActivity(
             android.content.Intent(context, ai.tireon.app.practice.PracticeActivity::class.java),
@@ -92,6 +102,7 @@ fun TireonApp(
                         driving = driving,
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
+                        reportState = reportState,
                         onStartPractice = launchPractice,
                     )
                 }
@@ -126,6 +137,7 @@ fun TireonApp(
                         driving = driving,
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
+                        reportState = reportState,
                         onStartPractice = launchPractice,
                     )
                 }
@@ -141,6 +153,7 @@ private fun TireonNavGraph(
     driving: ai.tireon.app.driving.DrivingUiState,
     homeState: HomeUiState,
     drivingViewModel: DrivingViewModel,
+    reportState: ai.tireon.app.report.ReportUiState,
     onStartPractice: () -> Unit,
 ) {
     NavHost(
@@ -160,10 +173,7 @@ private fun TireonNavGraph(
             PracticeEntryScreen(onStartPractice = onStartPractice)
         }
         composable(TireonDestination.REPORT.route) {
-            PlaceholderScreen(
-                title = stringResource(R.string.report_title),
-                description = stringResource(R.string.report_description),
-            )
+            ai.tireon.app.report.ReportScreen(state = reportState)
         }
         composable(TireonDestination.SETTINGS.route) {
             PlaceholderScreen(

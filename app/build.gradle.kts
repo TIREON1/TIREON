@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // release 서명 정보는 저장소 루트의 keystore.properties에서만 읽는다.
@@ -55,6 +56,13 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    testOptions {
+        unitTests {
+            // JVM 단위 테스트에서 android.util.Log 호출이 예외를 던지지 않게 한다.
+            isReturnDefaultValues = true
+        }
     }
 
     sourceSets {
@@ -122,6 +130,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.ui.tooling.preview)
 
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
 }

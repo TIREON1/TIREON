@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
+import ai.tireon.core.report.SessionRecordFactory
+import ai.tireon.core.report.SessionRepository
 import ai.tireon.core.driving.DrivingSample
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 class PracticeViewModel(
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
+    private val repository: SessionRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PracticeSessionState.initial())
@@ -41,6 +44,7 @@ class PracticeViewModel(
     private val samples = mutableListOf<DrivingSample>()
     private var sessionJob: Job? = null
     private var latestRestriction: DrivingRestriction? = null
+    private var sessionStartedAtMs = 0L
 
     fun start() {
         if (_state.value.phase != PracticePhase.READY) {
@@ -49,6 +53,7 @@ class PracticeViewModel(
         }
 
         Log.i(TAG, "세션 시작")
+        sessionStartedAtMs = System.currentTimeMillis()
         _summary.value = null
         _speedKmh.value = null
         samples.clear()
@@ -111,7 +116,28 @@ class PracticeViewModel(
             durationSec = _state.value.elapsedSec,
             sampleCount = samples.size,
         )
+        persist(result, events, distanceKm)
         return PracticeSummary.from(result, events)
+    }
+
+    private fun persist(
+        result: ScoreResult,
+        events: List<ai.tireon.core.driving.DrivingEvent>,
+        distanceKm: Float,
+    ) {
+        val record = SessionRecordFactory.create(
+            id = "session-$sessionStartedAtMs",
+            startedAtMs = sessionStartedAtMs,
+            durationSec = _state.value.elapsedSec,
+            distanceKm = if (distanceKm > 0f) distanceKm else null,
+            result = result,
+            events = events,
+        )
+        viewModelScope.launch {
+            repository.save(record).onFailure {
+                Log.e(TAG, "세션 기록 저장 실패", it)
+            }
+        }
     }
 
     /**
@@ -140,10 +166,11 @@ class PracticeViewModel(
     class Factory(
         private val signalSource: PleosSignalSource,
         private val restrictionMonitor: RestrictionMonitor,
+        private val repository: SessionRepository,
     ) : androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            PracticeViewModel(signalSource, restrictionMonitor) as T
+            PracticeViewModel(signalSource, restrictionMonitor, repository) as T
     }
 
     private companion object {
