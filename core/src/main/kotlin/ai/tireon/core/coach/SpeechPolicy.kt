@@ -25,6 +25,10 @@ object SpeechPolicy {
     ): Boolean {
         if (text.isBlank()) return false
         if (text == lastText) return false
+
+        // 재생 이력이 없으면 간격을 따지지 않는다.
+        if (lastSpokenAtMs <= 0L) return true
+
         return nowMs - lastSpokenAtMs >= MIN_INTERVAL_MS
     }
 }
