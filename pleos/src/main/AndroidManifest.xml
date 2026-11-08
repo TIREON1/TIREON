@@ -17,6 +17,9 @@
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
+    <!-- 차량 정보(VIN 등) 조회에 필요하다. -->
+    <uses-permission android:name="pleos.car.permission.CAR_INFO" />
+
     <!-- 방향지시등(TurnSignal) 조회에 필요하다. -->
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
 

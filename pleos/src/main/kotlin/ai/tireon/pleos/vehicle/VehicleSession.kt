@@ -2,6 +2,7 @@ package ai.tireon.pleos.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.Brake
+import ai.pleos.playground.vehicle.api.CarInfo
 import ai.pleos.playground.vehicle.api.Gear
 import ai.pleos.playground.vehicle.api.Odometer
 import ai.pleos.playground.vehicle.api.SteeringWheel
@@ -53,6 +54,9 @@ class VehicleSession(context: Context) {
     fun steeringWheel(): VehicleResult<SteeringWheel> =
         domain(OPERATION_STEERING) { vehicle.getSteeringWheel() }
 
+    /** 세션이 초기화된 경우에만 carInfo 도메인 객체를 반환한다. */
+    fun carInfo(): VehicleResult<CarInfo> = domain(OPERATION_CAR_INFO) { vehicle.getCarInfo() }
+
     /** 세션이 초기화된 경우에만 turnSignal 도메인 객체를 반환한다. */
     fun turnSignal(): VehicleResult<TurnSignal> =
         domain(OPERATION_TURN_SIGNAL) { vehicle.getTurnSignal() }
@@ -85,6 +89,7 @@ class VehicleSession(context: Context) {
         const val OPERATION_BRAKE = "brake"
         const val OPERATION_STEERING = "steeringWheel"
         const val OPERATION_TURN_SIGNAL = "turnSignal"
+        const val OPERATION_CAR_INFO = "carInfo"
     }
 }
 

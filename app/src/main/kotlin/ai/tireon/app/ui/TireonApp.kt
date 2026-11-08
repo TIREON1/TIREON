@@ -54,6 +54,14 @@ fun TireonApp(
     val reportViewModel: ai.tireon.app.report.ReportViewModel =
         viewModel(factory = ai.tireon.app.report.ReportViewModel.Factory(repository))
     val reportState by reportViewModel.state.collectAsStateWithLifecycle()
+
+    val settingsViewModel: ai.tireon.app.settings.SettingsViewModel = viewModel(
+        factory = ai.tireon.app.settings.SettingsViewModel.Factory(
+            appVersion = ai.tireon.app.BuildConfig.VERSION_NAME,
+            infoSource = ai.tireon.pleos.vehicle.PleosVehicleInfoSource(context),
+        ),
+    )
+    val settingsInfo by settingsViewModel.info.collectAsStateWithLifecycle()
     val launchPractice: (ai.tireon.core.mission.PracticeMission) -> Unit = { mission ->
         context.startActivity(
             ai.tireon.app.practice.PracticeActivity.intent(context, mission),
@@ -108,6 +116,7 @@ fun TireonApp(
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
+                        settingsInfo = settingsInfo,
                         onStartPractice = {
                             launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
                         },
@@ -147,6 +156,7 @@ fun TireonApp(
                         homeState = homeState,
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
+                        settingsInfo = settingsInfo,
                         onStartPractice = {
                             launchPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START)
                         },
@@ -167,6 +177,7 @@ private fun TireonNavGraph(
     homeState: HomeUiState,
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
+    settingsInfo: ai.tireon.app.settings.SettingsInfo,
     onStartPractice: () -> Unit,
     onStartDriving: () -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
@@ -192,10 +203,7 @@ private fun TireonNavGraph(
             ai.tireon.app.report.ReportScreen(state = reportState)
         }
         composable(TireonDestination.SETTINGS.route) {
-            PlaceholderScreen(
-                title = stringResource(R.string.settings_title),
-                description = stringResource(R.string.settings_description),
-            )
+            ai.tireon.app.settings.SettingsScreen(info = settingsInfo)
         }
     }
 }
