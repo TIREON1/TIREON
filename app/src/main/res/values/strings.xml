@@ -50,4 +50,11 @@
     <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 주행 중에는 화면이 꺼집니다.</string>
     <string name="driving_session_start">주행 기록 시작</string>
     <string name="action_stop_driving">주행 종료</string>
+
+    <string name="settings_app_section">앱 정보</string>
+    <string name="settings_app_version">버전</string>
+    <string name="settings_vehicle_section">차량 정보</string>
+    <string name="settings_connection">연결 상태</string>
+    <string name="settings_vin">차대번호 (VIN)</string>
+    <string name="settings_safety_section">안전 고지</string>
 </resources>
