@@ -29,8 +29,13 @@ class HomeViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            val latest = repository.latest()
-            _state.value = latest?.toUiState() ?: HomeUiState.empty()
+            val recent = repository.recent(RECOMMEND_WINDOW)
+            val base = recent.firstOrNull()?.toUiState() ?: HomeUiState.empty()
+
+            _state.value = base.copy(
+                recommendedMission = MissionRecommender.recommend(recent),
+                recommendReason = MissionRecommender.reasonFor(recent),
+            )
         }
     }
 
@@ -48,6 +53,11 @@ class HomeViewModel(
             ?.let { name -> runCatching { InsufficientReason.valueOf(name) }.getOrNull() }
             ?: InsufficientReason.NOT_ENOUGH_SAMPLES
         return HomeUiState.from(ai.tireon.core.analysis.ScoreResult.Insufficient(reason))
+    }
+
+    private companion object {
+        /** 추천에 사용할 최근 기록 수. */
+        const val RECOMMEND_WINDOW = 10
     }
 
     class Factory(private val repository: SessionRepository) : ViewModelProvider.Factory {

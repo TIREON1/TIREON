@@ -31,7 +31,7 @@ fun HomeScreen(
     state: HomeUiState,
     driving: DrivingUiState,
     layout: WindowLayout,
-    onStartPractice: () -> Unit,
+    onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
     onStartDriving: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
@@ -51,6 +51,7 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                RecommendCard(state = state, onStartPractice = onStartPractice)
                 DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
                 Button(
                     onClick = onStartDriving,
@@ -59,7 +60,7 @@ fun HomeScreen(
                     Text(text = stringResource(R.string.driving_session_start))
                 }
                 Button(
-                    onClick = onStartPractice,
+                    onClick = { onStartPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(text = stringResource(R.string.action_start))
@@ -75,6 +76,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ScoreCard(state = state, modifier = Modifier.fillMaxWidth())
+            RecommendCard(state = state, onStartPractice = onStartPractice)
             DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
             Button(
                 onClick = onStartDriving,
@@ -83,7 +85,47 @@ fun HomeScreen(
                 Text(text = stringResource(R.string.driving_session_start))
             }
             Button(
-                onClick = onStartPractice,
+                onClick = { onStartPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.action_start))
+            }
+        }
+    }
+}
+
+/** 추천 미션이 있을 때만 보여준다. */
+@Composable
+private fun RecommendCard(
+    state: HomeUiState,
+    onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
+) {
+    val mission = state.recommendedMission ?: return
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_recommend_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(ai.tireon.app.practice.MissionSelection.of(mission).nameResId),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            state.recommendReason?.let { reason ->
+                Text(
+                    text = reason,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Button(
+                onClick = { onStartPractice(mission) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(text = stringResource(R.string.action_start))
