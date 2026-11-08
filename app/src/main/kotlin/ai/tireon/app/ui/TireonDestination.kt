@@ -7,9 +7,10 @@ import ai.tireon.app.R
 enum class TireonDestination(
     val route: String,
     @StringRes val labelRes: Int,
+    val glyph: String,
 ) {
-    HOME("home", R.string.nav_home),
-    PRACTICE("practice", R.string.nav_practice),
-    REPORT("report", R.string.nav_report),
-    SETTINGS("settings", R.string.nav_settings),
+    HOME("home", R.string.nav_home, "H"),
+    PRACTICE("practice", R.string.nav_practice, "P"),
+    REPORT("report", R.string.nav_report, "R"),
+    SETTINGS("settings", R.string.nav_settings, "S"),
 }

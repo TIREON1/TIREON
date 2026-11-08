@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -27,6 +28,7 @@ import ai.tireon.app.R
 import ai.tireon.app.driving.DrivingViewModel
 import ai.tireon.app.home.HomeScreen
 import ai.tireon.app.home.HomeUiState
+import ai.tireon.app.home.HomeViewModel
 
 /**
  * 앱 전체 셸.
@@ -36,8 +38,10 @@ import ai.tireon.app.home.HomeUiState
 @Composable
 fun TireonApp(
     drivingViewModel: DrivingViewModel = viewModel(factory = viewModelFactory()),
+    homeViewModel: HomeViewModel = viewModel(),
 ) {
     val driving by drivingViewModel.uiState.collectAsStateWithLifecycle()
+    val homeState by homeViewModel.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -65,7 +69,12 @@ fun TireonApp(
                         NavigationRailItem(
                             selected = selected,
                             onClick = { navigate(destination) },
-                            icon = { },
+                            icon = {
+                                Text(
+                                    text = destination.glyph,
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                            },
                             label = { Text(text = stringResource(destination.labelRes)) },
                         )
                     }
@@ -75,6 +84,7 @@ fun TireonApp(
                         navController = navController,
                         layout = layout,
                         driving = driving,
+                        homeState = homeState,
                         drivingViewModel = drivingViewModel,
                     )
                 }
@@ -90,7 +100,12 @@ fun TireonApp(
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = { navigate(destination) },
-                                icon = { },
+                                icon = {
+                                    Text(
+                                        text = destination.glyph,
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
                                 label = { Text(text = stringResource(destination.labelRes)) },
                             )
                         }
@@ -102,6 +117,7 @@ fun TireonApp(
                         navController = navController,
                         layout = layout,
                         driving = driving,
+                        homeState = homeState,
                         drivingViewModel = drivingViewModel,
                     )
                 }
@@ -115,6 +131,7 @@ private fun TireonNavGraph(
     navController: androidx.navigation.NavHostController,
     layout: WindowLayout,
     driving: ai.tireon.app.driving.DrivingUiState,
+    homeState: HomeUiState,
     drivingViewModel: DrivingViewModel,
 ) {
     NavHost(
@@ -123,7 +140,7 @@ private fun TireonNavGraph(
     ) {
         composable(TireonDestination.HOME.route) {
             HomeScreen(
-                state = HomeUiState.empty(),
+                state = homeState,
                 driving = driving,
                 layout = layout,
                 onStartPractice = {
