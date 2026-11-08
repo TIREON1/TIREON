@@ -26,4 +26,9 @@
     <string name="practice_event_count">기록된 이벤트 %1$d건</string>
     <string name="action_stop">연습 종료</string>
     <string name="action_close">닫기</string>
+
+    <string name="report_empty">아직 주행 기록이 없어요</string>
+    <string name="report_score">%1$d점</string>
+    <string name="report_no_score">점수를 내지 못했어요</string>
+    <string name="report_save_failed">기록을 저장하지 못했어요</string>
 </resources>

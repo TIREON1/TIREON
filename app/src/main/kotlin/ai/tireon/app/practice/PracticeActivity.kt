@@ -30,11 +30,12 @@ class PracticeActivity : ComponentActivity() {
 
         val signalSource = DefaultPleosSignalSource(applicationContext, vehicleSession)
         val restrictionMonitor = RestrictionMonitor(applicationContext)
+        val repository = ai.tireon.app.report.SessionRepositoryProvider.get(applicationContext)
 
         setContent {
             TireonTheme {
                 val viewModel: PracticeViewModel = viewModel(
-                    factory = PracticeViewModel.Factory(signalSource, restrictionMonitor),
+                    factory = PracticeViewModel.Factory(signalSource, restrictionMonitor, repository),
                 )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val summary = viewModel.summary.collectAsStateWithLifecycle()
