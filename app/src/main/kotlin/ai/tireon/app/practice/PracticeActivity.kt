@@ -1,5 +1,6 @@
 package ai.tireon.app.practice
 
+import ai.tireon.pleos.coach.PleosCoachSpeaker
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
 import ai.tireon.pleos.vehicle.VehicleSession
@@ -20,6 +21,7 @@ import ai.tireon.app.ui.theme.TireonTheme
 class PracticeActivity : ComponentActivity() {
 
     private var session: VehicleSession? = null
+    private var speaker: PleosCoachSpeaker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,15 +29,17 @@ class PracticeActivity : ComponentActivity() {
 
         val vehicleSession = VehicleSession(applicationContext)
         session = vehicleSession
+        this.speaker = speaker
 
         val signalSource = DefaultPleosSignalSource(applicationContext, vehicleSession)
         val restrictionMonitor = RestrictionMonitor(applicationContext)
         val repository = ai.tireon.app.report.SessionRepositoryProvider.get(applicationContext)
+        val speaker = PleosCoachSpeaker(applicationContext)
 
         setContent {
             TireonTheme {
                 val viewModel: PracticeViewModel = viewModel(
-                    factory = PracticeViewModel.Factory(signalSource, restrictionMonitor, repository),
+                    factory = PracticeViewModel.Factory(signalSource, restrictionMonitor, repository, speaker),
                 )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val summary = viewModel.summary.collectAsStateWithLifecycle()
@@ -53,7 +57,13 @@ class PracticeActivity : ComponentActivity() {
         }
     }
 
+    override fun onStop() {
+        speaker?.stop()
+        super.onStop()
+    }
+
     override fun onDestroy() {
+        speaker?.release()
         session?.release()
         session = null
         super.onDestroy()

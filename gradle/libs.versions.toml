@@ -10,6 +10,7 @@ coroutines = "1.10.2"
 composeBom = "2026.06.01"
 pleosVehicle = "2.3.2"
 pleosVehicleData = "1.1.11"
+pleosTextToSpeech = "3.3.1"
 junit = "4.13.2"
 
 [libraries]
@@ -30,6 +31,7 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 pleos-vehicle = { module = "ai.pleos.playground:Vehicle", version.ref = "pleosVehicle" }
 pleos-vehicle-data = { module = "ai.pleos.playground:vehicle-data", version.ref = "pleosVehicleData" }
+pleos-text-to-speech = { module = "ai.pleos.playground:TextToSpeech", version.ref = "pleosTextToSpeech" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]

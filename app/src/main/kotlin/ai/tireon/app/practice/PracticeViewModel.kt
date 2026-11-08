@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
+import ai.tireon.core.coach.CoachMessages
+import ai.tireon.core.coach.SpeechPolicy
 import ai.tireon.core.report.SessionRecordFactory
 import ai.tireon.core.report.SessionRepository
+import ai.tireon.pleos.coach.CoachSpeaker
 import ai.tireon.core.driving.DrivingSample
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
@@ -28,6 +31,7 @@ class PracticeViewModel(
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
     private val repository: SessionRepository,
+    private val speaker: CoachSpeaker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PracticeSessionState.initial())
@@ -45,6 +49,8 @@ class PracticeViewModel(
     private var sessionJob: Job? = null
     private var latestRestriction: DrivingRestriction? = null
     private var sessionStartedAtMs = 0L
+    private var lastSpokenAtMs = 0L
+    private var lastSpokenText: String? = null
 
     fun start() {
         if (_state.value.phase != PracticePhase.READY) {
@@ -117,7 +123,27 @@ class PracticeViewModel(
             sampleCount = samples.size,
         )
         persist(result, events, distanceKm)
-        return PracticeSummary.from(result, events)
+
+        val summary = PracticeSummary.from(result, events)
+        speakSummary(result, events)
+        return summary
+    }
+
+    /**
+     * 세션 요약을 음성으로 읽는다.
+     *
+     * 문장 생성은 코치 계층에 맡기고, 재생 여부만 정책으로 거른다.
+     */
+    private fun speakSummary(result: ScoreResult, events: List<ai.tireon.core.driving.DrivingEvent>) {
+        val messages = CoachMessages().build(events, result)
+        val text = messages.joinToString(" ") { it.text }
+
+        val now = System.currentTimeMillis()
+        if (!SpeechPolicy.shouldSpeak(now, lastSpokenAtMs, text, lastSpokenText)) return
+
+        lastSpokenAtMs = now
+        lastSpokenText = text
+        speaker.speak(text)
     }
 
     private fun persist(
@@ -167,10 +193,11 @@ class PracticeViewModel(
         private val signalSource: PleosSignalSource,
         private val restrictionMonitor: RestrictionMonitor,
         private val repository: SessionRepository,
+        private val speaker: CoachSpeaker,
     ) : androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            PracticeViewModel(signalSource, restrictionMonitor, repository) as T
+            PracticeViewModel(signalSource, restrictionMonitor, repository, speaker) as T
     }
 
     private companion object {

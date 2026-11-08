@@ -44,6 +44,8 @@ dependencies {
     // Vehicle POM이 vehicle-data를 runtime scope로만 선언해 ErrorCode 등이
     // compile classpath에 노출되지 않는다. 오류 코드 분기를 위해 명시적으로 추가한다.
     implementation(libs.pleos.vehicle.data)
+    // 코칭 음성 안내. ON_DEVICE 모드는 네트워크와 앱 등록이 필요 없다.
+    implementation(libs.pleos.text.to.speech)
 
     implementation(libs.kotlinx.coroutines.android)
 
