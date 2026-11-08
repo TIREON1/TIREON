@@ -34,6 +34,10 @@ class PracticeViewModel(
     private val _summary = MutableStateFlow<PracticeSummary?>(null)
     val summary: StateFlow<PracticeSummary?> = _summary.asStateFlow()
 
+    /** 현재 속도(km/h). 측정값이 없으면 null이다. */
+    private val _speedKmh = MutableStateFlow<Float?>(null)
+    val speedKmh: StateFlow<Float?> = _speedKmh.asStateFlow()
+
     private val sessionActive = MutableStateFlow(false)
     private val samples = mutableListOf<DrivingSample>()
     private var sessionJob: Job? = null
@@ -45,6 +49,7 @@ class PracticeViewModel(
         if (_state.value.phase != PracticePhase.READY) return
 
         _summary.value = null
+        _speedKmh.value = null
         samples.clear()
         _state.value = _state.value.start(latestRestriction)
         sessionActive.value = true
@@ -60,6 +65,7 @@ class PracticeViewModel(
             launch {
                 signalSource.samples(sessionActive).collect { sample ->
                     samples += sample
+                    _speedKmh.value = sample.speedMps?.times(MPS_TO_KMH)
                     _state.value = _state.value.tick(latestRestriction, samples.size)
                 }
             }
@@ -128,6 +134,10 @@ class PracticeViewModel(
         }
 
         return if (counted == 0) 0f else (meters / 1000.0).toFloat()
+    }
+
+    private companion object {
+        const val MPS_TO_KMH = 3.6f
     }
 
     class Factory(
