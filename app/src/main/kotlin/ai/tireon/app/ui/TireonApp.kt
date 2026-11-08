@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ai.tireon.app.R
-import ai.tireon.pleos.DrivingUiState
-import ai.tireon.pleos.DrivingViewModel
+import ai.tireon.app.driving.DrivingUiState
+import ai.tireon.app.driving.DrivingViewModel
 
 @Composable
 fun TireonApp(
@@ -53,12 +53,6 @@ private fun TireonContent(
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
-            )
-
-            Text(
-                text = stringResource(R.string.vehicle_connection_status, state.initialized),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             // 단위는 Pleos SDK에서 제공하지 않으므로 값을 그대로 표시한다.
