@@ -60,4 +60,12 @@
     <string name="report_detail_no_events">기록된 이벤트가 없어요</string>
     <string name="report_detail_event_count">%1$d회</string>
     <string name="report_detail_mission">미션 결과</string>
+
+    <string name="stats_title">주간 통계</string>
+    <string name="stats_average_score">평균 점수</string>
+    <string name="stats_session_count">주행 횟수</string>
+    <string name="stats_total_distance">총 주행 거리</string>
+    <string name="stats_total_events">발생 이벤트</string>
+    <string name="stats_event_breakdown">이벤트 종류</string>
+    <string name="stats_no_events">기록된 이벤트가 없어요</string>
 </resources>

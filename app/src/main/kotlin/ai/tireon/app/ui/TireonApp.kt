@@ -62,6 +62,11 @@ fun TireonApp(
         ),
     )
     val settingsInfo by settingsViewModel.info.collectAsStateWithLifecycle()
+
+    val statsViewModel: ai.tireon.app.stats.StatsViewModel = viewModel(
+        factory = ai.tireon.app.stats.StatsViewModel.Factory(repository),
+    )
+    val statsState by statsViewModel.state.collectAsStateWithLifecycle()
     val launchPractice: (ai.tireon.core.mission.PracticeMission) -> Unit = { mission ->
         context.startActivity(
             ai.tireon.app.practice.PracticeActivity.intent(context, mission),
@@ -117,6 +122,7 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
+                        statsState = statsState,
                         onSelectRecord = reportViewModel::select,
                         onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
@@ -157,6 +163,7 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
+                        statsState = statsState,
                         onSelectRecord = reportViewModel::select,
                         onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
@@ -178,6 +185,7 @@ private fun TireonNavGraph(
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
     settingsInfo: ai.tireon.app.settings.SettingsInfo,
+    statsState: ai.tireon.app.stats.StatsUiState,
     onSelectRecord: (ai.tireon.core.report.DrivingSessionRecord) -> Unit,
     onClearReportSelection: () -> Unit,
     onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
@@ -211,6 +219,7 @@ private fun TireonNavGraph(
             } else {
                 ai.tireon.app.report.ReportScreen(
                     state = reportState,
+                    statsDisplay = statsState.display,
                     onSelectRecord = onSelectRecord,
                 )
             }
