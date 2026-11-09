@@ -26,6 +26,7 @@ import java.util.Locale
 @Composable
 fun ReportScreen(
     state: ReportUiState,
+    onSelectRecord: (DrivingSessionRecord) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (state.loading) return
@@ -59,14 +60,14 @@ fun ReportScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(state.records, key = { it.id }) { record ->
-            RecordCard(record = record)
+            RecordCard(record = record, onClick = { onSelectRecord(record) })
         }
     }
 }
 
 @Composable
-private fun RecordCard(record: DrivingSessionRecord) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun RecordCard(record: DrivingSessionRecord, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

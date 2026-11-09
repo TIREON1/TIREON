@@ -117,6 +117,8 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
+                        onSelectRecord = reportViewModel::select,
+                        onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
@@ -155,6 +157,8 @@ fun TireonApp(
                         drivingViewModel = drivingViewModel,
                         reportState = reportState,
                         settingsInfo = settingsInfo,
+                        onSelectRecord = reportViewModel::select,
+                        onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
@@ -174,6 +178,8 @@ private fun TireonNavGraph(
     drivingViewModel: DrivingViewModel,
     reportState: ai.tireon.app.report.ReportUiState,
     settingsInfo: ai.tireon.app.settings.SettingsInfo,
+    onSelectRecord: (ai.tireon.core.report.DrivingSessionRecord) -> Unit,
+    onClearReportSelection: () -> Unit,
     onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
     onStartDriving: () -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
@@ -196,7 +202,18 @@ private fun TireonNavGraph(
             PracticeEntryScreen(onSelectMission = onSelectMission)
         }
         composable(TireonDestination.REPORT.route) {
-            ai.tireon.app.report.ReportScreen(state = reportState)
+            val selectedDetail = reportState.selectedDetail
+            if (selectedDetail != null) {
+                ai.tireon.app.report.ReportDetailScreen(
+                    detail = selectedDetail,
+                    onBack = onClearReportSelection,
+                )
+            } else {
+                ai.tireon.app.report.ReportScreen(
+                    state = reportState,
+                    onSelectRecord = onSelectRecord,
+                )
+            }
         }
         composable(TireonDestination.SETTINGS.route) {
             ai.tireon.app.settings.SettingsScreen(info = settingsInfo)
