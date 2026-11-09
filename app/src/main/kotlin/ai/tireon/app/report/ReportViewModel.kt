@@ -16,6 +16,8 @@ data class ReportUiState(
     val loading: Boolean = true,
     /** 선택한 기록. null이면 목록 화면이다. */
     val selected: DrivingSessionRecord? = null,
+    /** 목록에 보이는 기록의 미션별 성적. */
+    val missionStats: MissionStatsDisplay = MissionStatsDisplay.from(emptyList()),
 ) {
     /** 상세로 볼 기록을 [ReportDetail]로 변환한 값. */
     val selectedDetail: ReportDetail?
@@ -50,6 +52,7 @@ class ReportViewModel(
                 records = records,
                 loading = false,
                 selected = selected,
+                missionStats = MissionStatsDisplay.from(records),
             )
         }
     }
