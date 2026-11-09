@@ -30,6 +30,12 @@ class PracticeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // 정상 진입은 MainActivity를 거치므로 권한이 있다. 직접 실행된 경우를 방어한다.
+        if (!hasSpeedPermission()) {
+            finish()
+            return
+        }
+
         val mission = intent.getStringExtra(EXTRA_MISSION)
             ?.let { name -> runCatching { PracticeMission.valueOf(name) }.getOrNull() }
             ?: PracticeMission.SMOOTH_START
@@ -91,4 +97,10 @@ class PracticeActivity : ComponentActivity() {
         session = null
         super.onDestroy()
     }
+
+    private fun hasSpeedPermission(): Boolean =
+        androidx.core.content.ContextCompat.checkSelfPermission(
+            this,
+            "android.car.permission.CAR_SPEED",
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 }
