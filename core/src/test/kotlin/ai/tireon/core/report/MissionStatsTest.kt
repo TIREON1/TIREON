@@ -155,16 +155,16 @@ class MissionStatsTest {
     }
 
     @Test
-    fun `기간 내 기록만 센다`() {
+    fun `받은 기록을 모두 집계한다`() {
         val records = listOf(
             record(id = "recent", success = true, startedAtMs = NOW - DAY),
             record(id = "old", success = false, startedAtMs = NOW - 30 * DAY),
         )
 
-        val stats = MissionStats.byMission(records, nowMs = NOW, periodDays = 7).single()
+        val stats = MissionStats.byMission(records).single()
 
         assertEquals(1, stats.successCount)
-        assertEquals(0, stats.failureCount)
+        assertEquals(1, stats.failureCount)
     }
 
     private companion object {

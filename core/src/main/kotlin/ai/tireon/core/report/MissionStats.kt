@@ -26,25 +26,15 @@ data class MissionScore(
  */
 object MissionStats {
 
-    private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
-
     /** 가장 어려운 미션으로 판단할 최소 시도 횟수. */
     private const val MIN_ATTEMPTS = 2
 
     /**
      * @param records 세션 기록. 정렬 순서와 무관하다.
-     * @param nowMs 기준 시각
-     * @param periodDays 집계 기간
      * @return 시도가 많은 순으로 정렬된 목록.
      */
-    fun byMission(
-        records: List<DrivingSessionRecord>,
-        nowMs: Long? = null,
-        periodDays: Int = 7,
-    ): List<MissionScore> {
-        val filtered = filterByPeriod(records, nowMs, periodDays)
-
-        val grouped = filtered
+    fun byMission(records: List<DrivingSessionRecord>): List<MissionScore> =
+        records
             .mapNotNull { record ->
                 val mission = record.mission?.let { name ->
                     runCatching { PracticeMission.valueOf(name) }.getOrNull()
@@ -53,15 +43,14 @@ object MissionStats {
                 mission to success
             }
             .groupBy({ it.first }, { it.second })
-
-        return grouped.map { (mission, results) ->
-            MissionScore(
-                mission = mission,
-                successCount = results.count { it },
-                failureCount = results.count { !it },
-            )
-        }.sortedByDescending { it.total }
-    }
+            .map { (mission, results) ->
+                MissionScore(
+                    mission = mission,
+                    successCount = results.count { it },
+                    failureCount = results.count { !it },
+                )
+            }
+            .sortedByDescending { it.total }
 
     /**
      * 가장 어려운 미션.
@@ -75,14 +64,4 @@ object MissionStats {
         byMission(records)
             .filter { it.total >= MIN_ATTEMPTS && it.failureCount > 0 }
             .minByOrNull { it.successRate }
-
-    private fun filterByPeriod(
-        records: List<DrivingSessionRecord>,
-        nowMs: Long?,
-        periodDays: Int,
-    ): List<DrivingSessionRecord> {
-        if (nowMs == null) return records
-        val start = nowMs - periodDays * MILLIS_PER_DAY
-        return records.filter { it.startedAtMs in start..nowMs }
-    }
 }
