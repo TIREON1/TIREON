@@ -50,4 +50,14 @@
     <string name="settings_vin">차대번호 (VIN)</string>
     <string name="settings_safety_section">안전 고지</string>
     <string name="home_recommend_title">추천 연습</string>
+
+    <string name="report_detail_back">← 목록으로</string>
+    <string name="report_detail_score_caption">점수</string>
+    <string name="report_detail_date">날짜</string>
+    <string name="report_detail_duration">주행 시간</string>
+    <string name="report_detail_distance">주행 거리</string>
+    <string name="report_detail_events">발생 이벤트</string>
+    <string name="report_detail_no_events">기록된 이벤트가 없어요</string>
+    <string name="report_detail_event_count">%1$d회</string>
+    <string name="report_detail_mission">미션 결과</string>
 </resources>

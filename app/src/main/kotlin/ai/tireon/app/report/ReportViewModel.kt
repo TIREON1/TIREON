@@ -14,7 +14,13 @@ import kotlinx.coroutines.launch
 data class ReportUiState(
     val records: List<DrivingSessionRecord> = emptyList(),
     val loading: Boolean = true,
-)
+    /** 선택한 기록. null이면 목록 화면이다. */
+    val selected: DrivingSessionRecord? = null,
+) {
+    /** 상세로 볼 기록을 [ReportDetail]로 변환한 값. */
+    val selectedDetail: ReportDetail?
+        get() = selected?.let { ReportDetail.from(it) }
+}
 
 class ReportViewModel(
     private val repository: SessionRepository,
@@ -29,8 +35,21 @@ class ReportViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            _state.value = ReportUiState(records = repository.recent(LIMIT), loading = false)
+            _state.value = ReportUiState(
+                records = repository.recent(LIMIT),
+                loading = false,
+                selected = null,
+            )
         }
+    }
+
+    fun select(record: DrivingSessionRecord) {
+        _state.value = _state.value.copy(selected = record)
+    }
+
+    /** 목록으로 돌아간다. 목록은 그대로 유지한다. */
+    fun clearSelection() {
+        _state.value = _state.value.copy(selected = null)
     }
 
     class Factory(private val repository: SessionRepository) : ViewModelProvider.Factory {
