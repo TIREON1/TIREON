@@ -7,6 +7,22 @@
     <string name="action_refresh">새로고침</string>
     <string name="action_start">연습 시작</string>
 
+    <string name="onboarding_intro_title">TIREON</string>
+    <string name="onboarding_intro_body">초보 운전자를 위한 AI 주행 코치입니다.\n\n운전 기록을 분석해 어떤 습관을 고치면 좋을지 알려줍니다.</string>
+    <string name="onboarding_modes_title">연습과 주행</string>
+    <string name="onboarding_modes_body">연습은 미션으로 익힙니다. 급가속 없이 출발하기처럼 한 가지만 골라 반복합니다.\n\n주행은 실도로를 기록합니다. 통제할 수 없는 변수가 많아 합격·불합격을 가르지 않고, 무엇이 몇 번 있었는지만 보여줍니다.</string>
+    <string name="onboarding_driving_title">주행 중에는</string>
+    <string name="onboarding_driving_body">주행 기록 중에는 화면이 꺼집니다. 운전에 집중하도록 하기 위함입니다.\n\n결과는 주행이 끝난 뒤에 확인할 수 있습니다.</string>
+    <string name="onboarding_safety_title">안전 고지</string>
+    <string name="onboarding_safety_body">TIREON은 운전 습관을 돌아보도록 돕는 참고 도구입니다.\n\n차량의 안전 장치를 대신하지 않습니다. 안전 운전의 책임은 운전자에게 있습니다.</string>
+    <string name="onboarding_skip">건너뛰기</string>
+    <string name="onboarding_next">다음</string>
+    <string name="onboarding_start">시작하기</string>
+    <string name="onboarding_back">이전</string>
+    <string name="onboarding_close">닫기</string>
+    <string name="onboarding_page_indicator">%1$d / %2$d</string>
+    <string name="settings_onboarding">앱 소개 다시 보기</string>
+    <string name="settings_guide_section">안내</string>
     <string name="nav_home">홈</string>
     <string name="nav_practice">연습</string>
     <string name="nav_report">리포트</string>
