@@ -2,6 +2,9 @@ package ai.tireon.app.driving
 
 import ai.tireon.app.report.SessionRepositoryProvider
 import ai.tireon.app.ui.theme.TireonTheme
+import ai.tireon.core.mission.DrivingMission
+import android.content.Context
+import android.content.Intent
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
 import ai.tireon.pleos.vehicle.VehicleSession
@@ -40,6 +43,7 @@ class DrivingSessionActivity : ComponentActivity() {
         val signalSource = DefaultPleosSignalSource(applicationContext, vehicleSession)
         val restrictionMonitor = RestrictionMonitor(applicationContext)
         val repository = SessionRepositoryProvider.get(applicationContext)
+        val mission = intent.mission()
 
         setContent {
             TireonTheme {
@@ -48,6 +52,7 @@ class DrivingSessionActivity : ComponentActivity() {
                         signalSource = signalSource,
                         restrictionMonitor = restrictionMonitor,
                         repository = repository,
+                        mission = mission,
                     ),
                 )
                 val state = viewModel.state.collectAsStateWithLifecycle()
@@ -64,6 +69,25 @@ class DrivingSessionActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    companion object {
+
+        private const val EXTRA_MISSION = "ai.tireon.app.extra.DRIVING_MISSION"
+
+        /**
+         * @param mission 고른 주행 미션. 고르지 않았으면 null.
+         */
+        fun intent(context: Context, mission: DrivingMission?): Intent =
+            Intent(context, DrivingSessionActivity::class.java).apply {
+                if (mission != null) putExtra(EXTRA_MISSION, mission.name)
+            }
+
+        /** @return 저장된 미션. 없거나 알 수 없는 이름이면 null. */
+        private fun Intent.mission(): DrivingMission? =
+            getStringExtra(EXTRA_MISSION)?.let { name ->
+                DrivingMission.entries.firstOrNull { it.name == name }
+            }
     }
 
     override fun onDestroy() {

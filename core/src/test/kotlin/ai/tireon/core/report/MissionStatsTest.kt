@@ -148,6 +148,18 @@ class MissionStatsTest {
     }
 
     @Test
+    fun `주행 미션은 연습 미션 통계에서 제외한다`() {
+        // 주행 미션은 이름만 같을 뿐 판정 방식이 다르다. 연습 미션 통계에 섞으면
+        // 성공률이 실제와 달라진다.
+        val records = listOf(
+            record(id = "a", mission = "SMOOTH_DRIVING", success = null),
+            record(id = "b", mission = "OVERALL", success = null),
+        )
+
+        assertTrue(MissionStats.byMission(records).isEmpty())
+    }
+
+    @Test
     fun `알 수 없는 미션 이름은 제외한다`() {
         val records = listOf(record(mission = "UNKNOWN_MISSION", success = true))
 

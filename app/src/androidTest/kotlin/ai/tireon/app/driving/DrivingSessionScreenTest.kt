@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import ai.tireon.core.mission.DrivingMission
 import ai.tireon.pleos.restriction.DrivingRestriction
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -77,6 +78,7 @@ class DrivingSessionScreenTest {
         val result = DrivingSessionResult(
             scoreText = "88",
             message = "주행이 끝났어요",
+            mission = DrivingMission.OVERALL,
             missionDetail = "급가속 1회, 급제동 2회, 급조향 0회, 방향지시등 0회",
             eventCount = 3,
         )
@@ -99,6 +101,7 @@ class DrivingSessionScreenTest {
         val result = DrivingSessionResult(
             scoreText = null,
             message = "1분 이상 주행하면 점수를 낼 수 있어요",
+            mission = null,
             missionDetail = null,
             eventCount = 0,
         )

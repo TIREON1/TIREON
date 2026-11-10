@@ -31,6 +31,9 @@ import ai.tireon.app.home.HomeScreen
 import ai.tireon.app.home.HomeUiState
 import ai.tireon.app.home.HomeViewModel
 
+/** 주행 미션 선택 화면 경로. 탭이 아니라 홈에서만 들어간다. */
+private const val DRIVING_MISSION_ROUTE = "driving-mission"
+
 /**
  * 앱 전체 셸.
  *
@@ -82,9 +85,9 @@ fun TireonApp(
             ai.tireon.app.practice.PracticeActivity.intent(context, mission),
         )
     }
-    val launchDriving: () -> Unit = {
+    val startDriving: (ai.tireon.core.mission.DrivingMission?) -> Unit = { mission ->
         context.startActivity(
-            android.content.Intent(context, ai.tireon.app.driving.DrivingSessionActivity::class.java),
+            ai.tireon.app.driving.DrivingSessionActivity.intent(context, mission),
         )
     }
 
@@ -136,7 +139,8 @@ fun TireonApp(
                         onSelectRecord = reportViewModel::select,
                         onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
-                        onStartDriving = launchDriving,
+                        onStartDriving = { navController.navigate(DRIVING_MISSION_ROUTE) },
+                        onSelectDrivingMission = startDriving,
                         onSelectMission = launchPractice,
                     )
                 }
@@ -177,7 +181,8 @@ fun TireonApp(
                         onSelectRecord = reportViewModel::select,
                         onClearReportSelection = reportViewModel::clearSelection,
                         onStartPractice = launchPractice,
-                        onStartDriving = launchDriving,
+                        onStartDriving = { navController.navigate(DRIVING_MISSION_ROUTE) },
+                        onSelectDrivingMission = startDriving,
                         onSelectMission = launchPractice,
                     )
                 }
@@ -200,6 +205,7 @@ private fun TireonNavGraph(
     onClearReportSelection: () -> Unit,
     onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
     onStartDriving: () -> Unit,
+    onSelectDrivingMission: (ai.tireon.core.mission.DrivingMission?) -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
 ) {
     NavHost(
@@ -218,6 +224,14 @@ private fun TireonNavGraph(
         }
         composable(TireonDestination.PRACTICE.route) {
             PracticeEntryScreen(onSelectMission = onSelectMission)
+        }
+        composable(DRIVING_MISSION_ROUTE) {
+            DrivingMissionEntryScreen(
+                onSelect = { mission ->
+                    onSelectDrivingMission(mission)
+                    navController.popBackStack()
+                },
+            )
         }
         composable(TireonDestination.REPORT.route) {
             val selectedDetail = reportState.selectedDetail
