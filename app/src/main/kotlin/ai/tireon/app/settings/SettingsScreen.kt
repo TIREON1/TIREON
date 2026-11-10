@@ -21,6 +21,7 @@ import ai.tireon.app.R
 fun SettingsScreen(
     info: SettingsInfo,
     modifier: Modifier = Modifier,
+    onShowOnboarding: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
@@ -45,6 +46,21 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_vin),
                 value = info.vinText,
             )
+        }
+
+        if (onShowOnboarding != null) {
+            InfoCard(title = stringResource(R.string.settings_guide_section)) {
+                Card(
+                    onClick = onShowOnboarding,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_onboarding),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
+            }
         }
 
         InfoCard(title = stringResource(R.string.settings_safety_section)) {

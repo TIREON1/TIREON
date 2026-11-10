@@ -12,10 +12,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ai.tireon.app.onboarding.OnboardingScreen
+import ai.tireon.app.onboarding.OnboardingStore
+import ai.tireon.app.onboarding.PrefsOnboardingStore
 import ai.tireon.app.permission.SpeedPermission
 import ai.tireon.app.permission.rememberSpeedPermissionState
 import ai.tireon.app.ui.TireonApp
@@ -34,19 +42,28 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * 권한 상태에 따라 앱 또는 안내를 보여준다.
+ * 권한과 온보딩 상태에 따라 무엇을 보여줄지 고른다.
  *
- * 차속 권한이 없으면 속도가 null이 되어 핵심 분석이 불가능하다. 조용히 진행하면
- * 사용자는 왜 점수가 안 나오는지 알 수 없으므로 안내를 먼저 보여준다.
+ * 권한이 먼저다. 권한이 없으면 앱 자체를 쓸 수 없으므로 온보딩을 읽을 이유도 없다.
+ * 온보딩을 마쳤거나 건너뛰면 다시 보여주지 않는다.
  */
 @Composable
 private fun TireonRoot() {
+    val context = LocalContext.current
+    val store: OnboardingStore = remember { PrefsOnboardingStore(context) }
+    var onboarded by remember { mutableStateOf(store.isCompleted()) }
     val speedGranted = rememberSpeedPermissionState()
 
-    when (speedGranted) {
-        true -> TireonApp()
-        false -> PermissionRequired()
-        null -> Unit
+    when {
+        speedGranted == false -> PermissionRequired()
+        speedGranted == null -> Unit
+        !onboarded -> OnboardingScreen(
+            onFinish = {
+                store.markCompleted()
+                onboarded = true
+            },
+        )
+        else -> TireonApp()
     }
 }
 

@@ -13,6 +13,9 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -69,6 +72,9 @@ fun TireonApp(
     )
     val statsState by statsViewModel.state.collectAsStateWithLifecycle()
 
+    // 설정에서 앱 소개를 다시 열 수 있다. 다시 볼 때는 완료 상태를 건드리지 않는다.
+    var showOnboarding by rememberSaveable { mutableStateOf(false) }
+
     // 주행을 마치고 돌아오면 새 기록이 생긴다. 화면에 다시 들어올 때 읽어야
     // 통계와 목록이 최신 상태가 된다. ViewModel은 화면 전환에도 살아있으므로
     // 생성자에서 한 번 읽는 것만으로는 부족하다.
@@ -86,6 +92,14 @@ fun TireonApp(
         context.startActivity(
             android.content.Intent(context, ai.tireon.app.driving.DrivingSessionActivity::class.java),
         )
+    }
+
+    if (showOnboarding) {
+        ai.tireon.app.onboarding.OnboardingScreen(
+            onFinish = { showOnboarding = false },
+            onClose = { showOnboarding = false },
+        )
+        return
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -138,6 +152,7 @@ fun TireonApp(
                         onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
+                        onShowOnboarding = { showOnboarding = true },
                     )
                 }
             }
@@ -179,6 +194,7 @@ fun TireonApp(
                         onStartPractice = launchPractice,
                         onStartDriving = launchDriving,
                         onSelectMission = launchPractice,
+                        onShowOnboarding = { showOnboarding = true },
                     )
                 }
             }
@@ -201,6 +217,7 @@ private fun TireonNavGraph(
     onStartPractice: (ai.tireon.core.mission.PracticeMission) -> Unit,
     onStartDriving: () -> Unit,
     onSelectMission: (ai.tireon.core.mission.PracticeMission) -> Unit,
+    onShowOnboarding: () -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -235,7 +252,10 @@ private fun TireonNavGraph(
             }
         }
         composable(TireonDestination.SETTINGS.route) {
-            ai.tireon.app.settings.SettingsScreen(info = settingsInfo)
+            ai.tireon.app.settings.SettingsScreen(
+                info = settingsInfo,
+                onShowOnboarding = onShowOnboarding,
+            )
         }
     }
 }
