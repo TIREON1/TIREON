@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -67,6 +68,15 @@ fun TireonApp(
         factory = ai.tireon.app.stats.StatsViewModel.Factory(repository),
     )
     val statsState by statsViewModel.state.collectAsStateWithLifecycle()
+
+    // 주행을 마치고 돌아오면 새 기록이 생긴다. 화면에 다시 들어올 때 읽어야
+    // 통계와 목록이 최신 상태가 된다. ViewModel은 화면 전환에도 살아있으므로
+    // 생성자에서 한 번 읽는 것만으로는 부족하다.
+    LifecycleResumeEffect(Unit) {
+        reportViewModel.refresh()
+        statsViewModel.refresh()
+        onPauseOrDispose { }
+    }
     val launchPractice: (ai.tireon.core.mission.PracticeMission) -> Unit = { mission ->
         context.startActivity(
             ai.tireon.app.practice.PracticeActivity.intent(context, mission),

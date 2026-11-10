@@ -62,7 +62,7 @@ fun ReportScreen(
     ) {
         statsDisplay?.takeIf { it.hasStats }?.let { display ->
             item(key = "stats") {
-                ai.tireon.app.stats.StatsScreen(display = display)
+                ai.tireon.app.stats.StatsSection(display = display)
             }
         }
 

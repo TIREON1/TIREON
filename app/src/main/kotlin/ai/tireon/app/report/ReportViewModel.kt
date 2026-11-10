@@ -33,12 +33,23 @@ class ReportViewModel(
         refresh()
     }
 
+    /**
+     * 저장소에서 다시 읽는다.
+     *
+     * 상세 화면을 보던 중이면 같은 기록을 계속 보여준다. 갱신이 사용자를 목록으로
+     * 쫓아내면 안 된다.
+     */
     fun refresh() {
         viewModelScope.launch {
-            _state.value = ReportUiState(
-                records = repository.recent(LIMIT),
+            val records = repository.recent(LIMIT)
+            val current = _state.value
+            val selected = current.selected?.let { previous ->
+                records.firstOrNull { it.id == previous.id }
+            }
+            _state.value = current.copy(
+                records = records,
                 loading = false,
-                selected = null,
+                selected = selected,
             )
         }
     }
