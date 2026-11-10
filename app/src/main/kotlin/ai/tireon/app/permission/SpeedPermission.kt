@@ -18,6 +18,9 @@ object SpeedPermission {
 
     private const val RATIONALE = "급가속과 급제동을 분석하려면 차량 속도 권한이 필요해요"
 
+    private const val SETTINGS_RATIONALE =
+        "속도 권한이 꺼져 있어요. 설정에서 권한을 켜면 분석할 수 있어요"
+
     /** 요청 전 판정. */
     enum class Decision {
         /** 요청할 필요가 없다. */
@@ -31,6 +34,9 @@ object SpeedPermission {
 
         /** 요청 후 거부됐다. */
         DENIED,
+
+        /** 시스템이 더 이상 대화상자를 띄우지 않는다. 설정으로 보내야 한다. */
+        OPEN_SETTINGS,
     }
 
     /**
@@ -43,13 +49,52 @@ object SpeedPermission {
         else -> Decision.REQUEST
     }
 
+    /**
+     * 화면이 다시 보일 때의 판정.
+     *
+     * ViewModel이나 Compose 상태는 화면 전환에도 살아있다. 사용자가 설정에서 권한을
+     * 켜고 돌아오는 경우를 놓치지 않으려면 복귀 시점에 시스템 값으로 다시 판정해야 한다.
+     *
+     * @param grantedNow 지금 승인됐는지
+     * @param shouldShowRationale 시스템이 이유 설명을 요구하는지
+     * @param askedBefore 이 앱이 이전에 권한을 요청한 적이 있는지
+     * @param previouslyGranted 이전에 승인한 적이 있는지
+     */
+    fun decideOnResume(
+        grantedNow: Boolean,
+        shouldShowRationale: Boolean,
+        askedBefore: Boolean = false,
+        previouslyGranted: Boolean = false,
+    ): Decision = when {
+        grantedNow -> Decision.NONE
+        shouldShowRationale -> Decision.REQUEST_WITH_RATIONALE
+        // 사용자가 직접 끈 경우에는 대화상자가 다시 뜬다.
+        previouslyGranted -> Decision.REQUEST
+        // 물어본 적이 있는데 안내도 요구하지 않으면 두 번 거부한 것이다.
+        // 이때는 다시 물어봐도 아무 일도 일어나지 않는다.
+        askedBefore -> Decision.OPEN_SETTINGS
+        else -> Decision.REQUEST
+    }
+
+    /** 이유를 설명한 뒤 다시 요청한다. */
+    fun decideAfterRationale(): Decision = Decision.REQUEST
+
     /** 요청 직후 결과 판정. */
     fun decideAfterRequest(granted: Boolean): Decision =
         if (granted) Decision.NONE else Decision.DENIED
 
+    /**
+     * 지금 권한을 요청해야 하는지.
+     *
+     * 요청 중에 또 요청하면 시스템이 무시하거나 두 번 뜬다. 진행 중이면 건드리지 않는다.
+     */
+    fun shouldRequest(decision: Decision, requestInFlight: Boolean): Boolean =
+        decision == Decision.REQUEST && !requestInFlight
+
     /** @return 안내 문구. 안내가 필요 없으면 null. */
     fun rationaleFor(decision: Decision): String? = when (decision) {
         Decision.REQUEST_WITH_RATIONALE -> RATIONALE
+        Decision.OPEN_SETTINGS -> SETTINGS_RATIONALE
         else -> null
     }
 }
