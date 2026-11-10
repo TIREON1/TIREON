@@ -66,6 +66,10 @@ fun ReportScreen(
             }
         }
 
+        item(key = "mission_stats") {
+            MissionStatsSection(display = state.missionStats)
+        }
+
         items(state.records, key = { it.id }) { record ->
             RecordCard(record = record, onClick = { onSelectRecord(record) })
         }
