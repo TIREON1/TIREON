@@ -26,6 +26,7 @@ import java.util.Locale
 @Composable
 fun ReportScreen(
     state: ReportUiState,
+    statsDisplay: ai.tireon.app.stats.StatsDisplay? = null,
     onSelectRecord: (DrivingSessionRecord) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -59,6 +60,12 @@ fun ReportScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        statsDisplay?.takeIf { it.hasStats }?.let { display ->
+            item(key = "stats") {
+                ai.tireon.app.stats.StatsScreen(display = display)
+            }
+        }
+
         items(state.records, key = { it.id }) { record ->
             RecordCard(record = record, onClick = { onSelectRecord(record) })
         }

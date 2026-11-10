@@ -1,15 +1,10 @@
 package ai.tireon.app.report
 
 import ai.tireon.core.report.DrivingSessionRecord
+import ai.tireon.core.report.EventLine
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-/** 상세 화면에 표시할 이벤트 한 줄. */
-data class EventLine(
-    val label: String,
-    val count: Int,
-)
 
 /**
  * 세션 기록을 상세 화면 표시용으로 바꾼다.
