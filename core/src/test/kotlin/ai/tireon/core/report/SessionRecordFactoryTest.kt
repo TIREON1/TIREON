@@ -6,6 +6,7 @@ import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.Confidence
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
+import ai.tireon.core.mission.DrivingMission
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -64,5 +65,53 @@ class SessionRecordFactoryTest {
         )
 
         assertEquals(emptyMap(), record.eventCounts)
+    }
+
+    @Test
+    fun `주행 미션 이름을 기록에 담는다`() {
+        val record = SessionRecordFactory.create(
+            id = "s4",
+            startedAtMs = 4_000L,
+            durationSec = 300,
+            distanceKm = 5f,
+            result = ScoreResult.Scored(DrivingScore(80), emptyList()),
+            events = emptyList(),
+            drivingMission = DrivingMission.SMOOTH_DRIVING,
+        )
+
+        assertEquals("SMOOTH_DRIVING", record.mission)
+    }
+
+    @Test
+    fun `주행 미션은 성공 여부를 판정하지 않는다`() {
+        val record = SessionRecordFactory.create(
+            id = "s5",
+            startedAtMs = 5_000L,
+            durationSec = 300,
+            distanceKm = 5f,
+            result = ScoreResult.Scored(DrivingScore(80), emptyList()),
+            events = emptyList(),
+            drivingMission = DrivingMission.OVERALL,
+        )
+
+        // 실도로는 통제할 수 없는 변수가 많아 합격·불합격을 가르지 않는다.
+        assertNull(record.missionSuccess)
+        assertEquals("OVERALL", record.mission)
+    }
+
+    @Test
+    fun `주행 미션을 고르지 않으면 미션을 남기지 않는다`() {
+        val record = SessionRecordFactory.create(
+            id = "s6",
+            startedAtMs = 6_000L,
+            durationSec = 300,
+            distanceKm = 5f,
+            result = ScoreResult.Scored(DrivingScore(80), emptyList()),
+            events = emptyList(),
+            drivingMission = null,
+        )
+
+        assertNull(record.mission)
+        assertNull(record.missionSuccess)
     }
 }

@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 data class DrivingSessionResult(
     val scoreText: String?,
     val message: String,
+    /** 고른 주행 미션. 고르지 않았으면 null. */
+    val mission: DrivingMission?,
     val missionDetail: String?,
     val eventCount: Int,
 )
@@ -42,6 +44,7 @@ class DrivingSessionViewModel(
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
     private val repository: SessionRepository,
+    private val mission: DrivingMission? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DrivingSessionState.initial())
@@ -120,17 +123,22 @@ class DrivingSessionViewModel(
             sampleCount = samples.size,
         )
 
-        val missionResult = DrivingMissionEvaluator().evaluate(
-            mission = DrivingMission.OVERALL,
-            samples = samples,
-            events = events,
-        )
+        // 미션을 고르지 않았으면 판정하지 않는다. "전체 점검" 결과를 붙이면
+        // 사용자가 미션을 고른 것으로 오해한다.
+        val missionResult = mission?.let { selected ->
+            DrivingMissionEvaluator().evaluate(
+                mission = selected,
+                samples = samples,
+                events = events,
+            )
+        }
 
         persist(scoreResult, events, distanceKm)
 
         return DrivingSessionResult(
             scoreText = (scoreResult as? ScoreResult.Scored)?.score?.value?.toString(),
             message = messageOf(scoreResult),
+            mission = mission,
             missionDetail = (missionResult as? DrivingMissionResult.Scored)?.detail,
             eventCount = events.size,
         )
@@ -162,6 +170,7 @@ class DrivingSessionViewModel(
             distanceKm = if (distanceKm > 0f) distanceKm else null,
             result = result,
             events = events,
+            drivingMission = mission,
         )
         viewModelScope.launch {
             val result = repository.save(record)
@@ -175,10 +184,11 @@ class DrivingSessionViewModel(
         private val signalSource: PleosSignalSource,
         private val restrictionMonitor: RestrictionMonitor,
         private val repository: SessionRepository,
+        private val mission: DrivingMission? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            DrivingSessionViewModel(signalSource, restrictionMonitor, repository) as T
+            DrivingSessionViewModel(signalSource, restrictionMonitor, repository, mission) as T
     }
 
     private companion object {

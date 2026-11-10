@@ -102,6 +102,15 @@ private fun ResultContent(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                result?.mission?.let { mission ->
+                    Text(
+                        text = stringResource(
+                            R.string.driving_mission_label,
+                            stringResource(DrivingMissionSelection.of(mission).nameResId),
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
                 result?.missionDetail?.let { detail ->
                     Text(
                         text = detail,

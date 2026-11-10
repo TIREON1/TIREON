@@ -2,12 +2,22 @@ package ai.tireon.core.report
 
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.DrivingEvent
+import ai.tireon.core.mission.DrivingMission
 import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.mission.PracticeMission
 
 /** 분석 결과를 저장 가능한 기록으로 바꾼다. */
 object SessionRecordFactory {
 
+    /**
+     * @param mission 연습 미션. 연습 세션이 아니면 null.
+     * @param missionResult 연습 미션 판정 결과.
+     * @param drivingMission 주행 미션. 고르지 않았으면 null.
+     *
+     * 주행 미션은 성공·실패를 가르지 않는다. 실도로는 통제할 수 없는 변수가 많아
+     * 합격·불합격보다 "무엇이 몇 번 있었는지"를 보여주는 편이 정직하다. 그래서
+     * [drivingMission]은 이름만 남기고 `missionSuccess`는 null로 둔다.
+     */
     fun create(
         id: String,
         startedAtMs: Long,
@@ -17,6 +27,7 @@ object SessionRecordFactory {
         events: List<DrivingEvent>,
         mission: PracticeMission? = null,
         missionResult: MissionResult? = null,
+        drivingMission: DrivingMission? = null,
     ): DrivingSessionRecord {
         val counts = events.groupingBy { it.type.name }.eachCount()
 
@@ -46,7 +57,7 @@ object SessionRecordFactory {
             score = score,
             insufficientReason = insufficientReason,
             eventCounts = counts,
-            mission = mission?.name,
+            mission = mission?.name ?: drivingMission?.name,
             missionSuccess = success,
             missionDetail = detail,
         )
