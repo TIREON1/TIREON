@@ -27,7 +27,8 @@ class SettingsScreenTest {
             )
         }
 
-        composeRule.onNodeWithText("버전: 0.1.0").assertIsDisplayed()
+        composeRule.onNodeWithText("버전").assertIsDisplayed()
+        composeRule.onNodeWithText("0.1.0").assertIsDisplayed()
     }
 
     @Test
@@ -42,8 +43,10 @@ class SettingsScreenTest {
             )
         }
 
-        composeRule.onNodeWithText("연결 상태: 연결됨").assertIsDisplayed()
-        composeRule.onNodeWithText("차대번호 (VIN): KMHXX00XXXX000000").assertIsDisplayed()
+        composeRule.onNodeWithText("연결 상태").assertIsDisplayed()
+        composeRule.onNodeWithText("연결됨").assertIsDisplayed()
+        composeRule.onNodeWithText("차대번호 (VIN)").assertIsDisplayed()
+        composeRule.onNodeWithText("KMHXX00XXXX000000").assertIsDisplayed()
     }
 
     @Test
@@ -58,8 +61,8 @@ class SettingsScreenTest {
             )
         }
 
-        composeRule.onNodeWithText("연결 상태: 연결되지 않음").assertIsDisplayed()
-        composeRule.onNodeWithText("차대번호 (VIN): 사용할 수 없음").assertIsDisplayed()
+        composeRule.onNodeWithText("연결되지 않음").assertIsDisplayed()
+        composeRule.onNodeWithText("사용할 수 없음").assertIsDisplayed()
     }
 
     @Test

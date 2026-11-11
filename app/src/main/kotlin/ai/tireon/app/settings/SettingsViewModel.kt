@@ -35,12 +35,13 @@ class SettingsViewModel(
         super.onCleared()
     }
 
+    /** @param infoSource ViewModel을 만들 때만 호출해 차량 세션을 연다. */
     class Factory(
         private val appVersion: String,
-        private val infoSource: VehicleInfoSource,
+        private val infoSource: () -> VehicleInfoSource,
     ) : androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            SettingsViewModel(appVersion, infoSource) as T
+            SettingsViewModel(appVersion, infoSource()) as T
     }
 }

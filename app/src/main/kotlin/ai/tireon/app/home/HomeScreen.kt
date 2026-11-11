@@ -6,19 +6,30 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
 import ai.tireon.app.driving.DrivingUiState
+import ai.tireon.app.ui.ActionStyle
 import ai.tireon.app.ui.DrivingDisplay
+import ai.tireon.app.ui.IconBadge
+import ai.tireon.app.ui.MissionIcons
+import ai.tireon.app.ui.ScoreRing
+import ai.tireon.app.ui.SectionCard
+import ai.tireon.app.ui.StatTile
+import ai.tireon.app.ui.TireonActionButton
+import ai.tireon.app.ui.TireonDimens
 import ai.tireon.app.ui.WindowLayout
 
 /**
@@ -40,57 +51,80 @@ fun HomeScreen(
         Row(
             modifier = modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(TireonDimens.ScreenPadding),
+            horizontalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
         ) {
-            ScoreCard(
-                state = state,
-                modifier = Modifier.weight(1f),
-            )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
+            ) {
+                Greeting()
+                ScoreCard(state = state, modifier = Modifier.fillMaxWidth())
+                VehicleCard(driving = driving, onRefresh = onRefresh)
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
             ) {
                 RecommendCard(state = state, onStartPractice = onStartPractice)
-                DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
-                Button(
+                StartCard(
+                    icon = R.drawable.ic_car,
+                    description = stringResource(R.string.home_drive_description),
+                    action = stringResource(R.string.driving_session_start),
+                    style = ActionStyle.PRIMARY,
                     onClick = onStartDriving,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = stringResource(R.string.driving_session_start))
-                }
-                Button(
+                )
+                StartCard(
+                    icon = R.drawable.ic_practice,
+                    description = stringResource(R.string.home_practice_description),
+                    action = stringResource(R.string.action_start),
+                    style = ActionStyle.SECONDARY,
                     onClick = { onStartPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = stringResource(R.string.action_start))
-                }
+                )
             }
         }
     } else {
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .verticalScroll(rememberScrollState())
+                .padding(TireonDimens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
         ) {
+            Greeting()
             ScoreCard(state = state, modifier = Modifier.fillMaxWidth())
             RecommendCard(state = state, onStartPractice = onStartPractice)
-            DrivingSummaryCard(driving = driving, onRefresh = onRefresh)
-            Button(
+            TireonActionButton(
+                text = stringResource(R.string.driving_session_start),
                 onClick = onStartDriving,
+                icon = R.drawable.ic_car,
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(text = stringResource(R.string.driving_session_start))
-            }
-            Button(
+            )
+            TireonActionButton(
+                text = stringResource(R.string.action_start),
                 onClick = { onStartPractice(ai.tireon.core.mission.PracticeMission.SMOOTH_START) },
+                icon = R.drawable.ic_practice,
+                style = ActionStyle.SECONDARY,
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(text = stringResource(R.string.action_start))
-            }
+            )
+            VehicleCard(driving = driving, onRefresh = onRefresh)
         }
+    }
+}
+
+@Composable
+private fun Greeting() {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(R.string.home_greeting),
+            style = MaterialTheme.typography.headlineSmall,
+        )
     }
 }
 
@@ -102,56 +136,56 @@ private fun RecommendCard(
 ) {
     val mission = state.recommendedMission ?: return
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+    SectionCard(
+        modifier = Modifier.fillMaxWidth(),
+        title = stringResource(R.string.home_recommend_title),
+        titleIcon = R.drawable.ic_sparkle,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.home_recommend_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(ai.tireon.app.practice.MissionSelection.of(mission).nameResId),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            state.recommendReason?.let { reason ->
+            IconBadge(icon = MissionIcons.of(mission), size = 56.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
-                    text = reason,
+                    text = stringResource(ai.tireon.app.practice.MissionSelection.of(mission).nameResId),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                state.recommendReason?.let { reason ->
+                    Text(
+                        text = reason,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.home_recommend_badge),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Button(
-                onClick = { onStartPractice(mission) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(text = stringResource(R.string.action_start))
-            }
         }
+        TireonActionButton(
+            text = stringResource(R.string.action_start),
+            onClick = { onStartPractice(mission) },
+            icon = R.drawable.ic_play,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
 @Composable
 private fun ScoreCard(state: HomeUiState, modifier: Modifier = Modifier) {
-    Card(modifier = modifier) {
+    SectionCard(modifier = modifier) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            val score = state.scoreText
-            if (score != null) {
-                Text(
-                    text = score,
-                    style = MaterialTheme.typography.displayLarge,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            ScoreRing(scoreText = state.scoreText)
             Text(
                 text = state.statusText,
                 style = MaterialTheme.typography.bodyLarge,
@@ -163,41 +197,79 @@ private fun ScoreCard(state: HomeUiState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun DrivingSummaryCard(driving: DrivingUiState, onRefresh: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+private fun StartCard(
+    icon: Int,
+    description: String,
+    action: String,
+    style: ActionStyle,
+    onClick: () -> Unit,
+) {
+    SectionCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            IconBadge(
+                icon = icon,
+                size = 56.dp,
+                tint = MaterialTheme.colorScheme.secondary,
+                container = MaterialTheme.colorScheme.secondaryContainer,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        TireonActionButton(
+            text = action,
+            onClick = onClick,
+            icon = R.drawable.ic_play,
+            style = style,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun VehicleCard(driving: DrivingUiState, onRefresh: () -> Unit) {
+    val unavailable = stringResource(R.string.value_unavailable)
+    SectionCard(
+        modifier = Modifier.fillMaxWidth(),
+        title = stringResource(R.string.settings_vehicle_section),
+        titleIcon = R.drawable.ic_car,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // 단위는 SDK가 제공하지 않으므로 값을 그대로 표시한다.
-            Text(
-                text = stringResource(
-                    R.string.distance_driven,
-                    DrivingDisplay.distance(driving.distanceDriven)
-                        ?: stringResource(R.string.value_unavailable),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
+            StatTile(
+                label = stringResource(R.string.distance_driven),
+                value = DrivingDisplay.distance(driving.distanceDriven) ?: unavailable,
+                icon = R.drawable.ic_place,
+                modifier = Modifier.weight(1f),
             )
-            Text(
-                text = stringResource(
-                    R.string.trip_driving_time,
-                    DrivingDisplay.drivingTime(driving.tripDrivingTime)
-                        ?: stringResource(R.string.value_unavailable),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
+            StatTile(
+                label = stringResource(R.string.trip_driving_time),
+                value = DrivingDisplay.drivingTime(driving.tripDrivingTime) ?: unavailable,
+                icon = R.drawable.ic_timer,
+                modifier = Modifier.weight(1f),
             )
-            driving.message?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+            IconButton(onClick = onRefresh) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_refresh),
+                    contentDescription = stringResource(R.string.action_refresh),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Button(onClick = onRefresh) {
-                Text(text = stringResource(R.string.action_refresh))
-            }
+        }
+        driving.message?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
     }
 }

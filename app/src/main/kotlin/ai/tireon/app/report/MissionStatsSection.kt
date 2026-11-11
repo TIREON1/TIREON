@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,9 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
+import ai.tireon.app.ui.MeterBar
+import ai.tireon.app.ui.SectionCard
 
 /**
  * 미션별 성적 목록.
@@ -31,35 +30,22 @@ fun MissionStatsSection(
 ) {
     if (!display.hasStats) return
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    SectionCard(
+        modifier = modifier.fillMaxWidth(),
+        title = stringResource(R.string.mission_stats_title),
+        titleIcon = R.drawable.ic_practice,
     ) {
-        Text(
-            text = stringResource(R.string.mission_stats_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-
         display.hardestText?.let { text ->
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.tertiary,
             )
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                display.rows.forEach { row ->
-                    MissionStatsRow(row = row)
-                }
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            display.rows.forEach { row ->
+                MissionStatsRow(row = row)
             }
         }
     }
@@ -67,28 +53,29 @@ fun MissionStatsSection(
 
 @Composable
 private fun MissionStatsRow(row: MissionStatsDisplay.MissionRow) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = "${row.name} ${row.rateText} ${row.countText}" },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = row.name,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = row.countText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Start,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(text = row.name, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = row.countText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(text = row.rateText, style = MaterialTheme.typography.titleMedium)
         }
-        Text(
-            text = row.rateText,
-            style = MaterialTheme.typography.titleMedium,
-        )
+        MeterBar(fraction = row.ratePercent / 100f)
     }
 }

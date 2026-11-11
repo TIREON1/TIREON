@@ -11,8 +11,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import ai.tireon.app.ui.theme.TireonSurface
 import ai.tireon.app.ui.theme.TireonTheme
 
 /**
@@ -23,8 +26,29 @@ import ai.tireon.app.ui.theme.TireonTheme
  */
 class PracticeActivity : ComponentActivity() {
 
-    private var session: VehicleSession? = null
-    private var speaker: PleosCoachSpeaker? = null
+    // 차량 세션과 음성 엔진은 ViewModel과 수명을 같이한다. 화면 회전, 창 크기 변경,
+    // 주야간 전환으로 액티비티가 다시 만들어져도 진행 중인 연습은 같은 자원을 계속 쓴다.
+    private val viewModel: PracticeViewModel by viewModels {
+        viewModelFactory {
+            initializer {
+                val session = VehicleSession(applicationContext)
+                val speaker = PleosCoachSpeaker(applicationContext)
+                PracticeViewModel(
+                    mission = mission(),
+                    signalSource = DefaultPleosSignalSource(applicationContext, session),
+                    restrictionMonitor = RestrictionMonitor(applicationContext),
+                    repository = ai.tireon.app.report.SessionRepositoryProvider.get(applicationContext),
+                    speaker = speaker,
+                ).apply {
+                    addCloseable { speaker.release() }
+                    addCloseable { session.release() }
+                }
+            }
+        }
+    }
+
+    /** 권한이 없어 바로 닫힌 경우 ViewModel을 만들지 않기 위한 표시. */
+    private var contentShown = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,66 +60,47 @@ class PracticeActivity : ComponentActivity() {
             return
         }
 
-        val mission = intent.getStringExtra(EXTRA_MISSION)
-            ?.let { name -> runCatching { PracticeMission.valueOf(name) }.getOrNull() }
-            ?: PracticeMission.SMOOTH_START
-
-        val vehicleSession = VehicleSession(applicationContext)
-        session = vehicleSession
-        this.speaker = speaker
-
-        val signalSource = DefaultPleosSignalSource(applicationContext, vehicleSession)
-        val restrictionMonitor = RestrictionMonitor(applicationContext)
-        val repository = ai.tireon.app.report.SessionRepositoryProvider.get(applicationContext)
-        val speaker = PleosCoachSpeaker(applicationContext)
+        val mission = mission()
 
         setContent {
             TireonTheme {
-                val viewModel: PracticeViewModel = viewModel(
-                    factory = PracticeViewModel.Factory(
-                        mission = mission,
-                        signalSource = signalSource,
-                        restrictionMonitor = restrictionMonitor,
-                        repository = repository,
-                        speaker = speaker,
-                    ),
-                )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val summary = viewModel.summary.collectAsStateWithLifecycle()
                 val speed = viewModel.speedKmh.collectAsStateWithLifecycle()
                 val saveStatus = viewModel.saveStatus.collectAsStateWithLifecycle()
 
-                PracticeScreen(
-                    mission = MissionSelection.of(mission),
-                    state = state.value,
-                    summary = summary.value,
-                    saveStatus = saveStatus.value,
-                    speedText = speed.value?.let { it.toInt().toString() },
-                    onStart = viewModel::start,
-                    onStop = viewModel::requestStop,
-                    onClose = { finish() },
-                )
+                TireonSurface {
+                    PracticeScreen(
+                        mission = MissionSelection.of(mission),
+                        state = state.value,
+                        summary = summary.value,
+                        saveStatus = saveStatus.value,
+                        speedText = speed.value?.let { it.toInt().toString() },
+                        onStart = viewModel::start,
+                        onStop = viewModel::requestStop,
+                        onClose = { finish() },
+                    )
+                }
             }
         }
+        contentShown = true
     }
 
     override fun onStop() {
-        speaker?.stop()
+        if (contentShown) viewModel.stopSpeaking()
         super.onStop()
     }
+
+    private fun mission(): PracticeMission =
+        intent.getStringExtra(EXTRA_MISSION)
+            ?.let { name -> runCatching { PracticeMission.valueOf(name) }.getOrNull() }
+            ?: PracticeMission.SMOOTH_START
 
     companion object {
         private const val EXTRA_MISSION = "ai.tireon.app.extra.MISSION"
 
         fun intent(context: Context, mission: PracticeMission): Intent =
             Intent(context, PracticeActivity::class.java).putExtra(EXTRA_MISSION, mission.name)
-    }
-
-    override fun onDestroy() {
-        speaker?.release()
-        session?.release()
-        session = null
-        super.onDestroy()
     }
 
     private fun hasSpeedPermission(): Boolean =

@@ -42,11 +42,23 @@ class PracticeSessionStateTest {
     }
 
     @Test
-    fun `진행 중에는 초가 증가한다`() {
-        var state = PracticeSessionState.initial().start(DrivingRestriction.NONE)
-        repeat(3) { state = state.tick(DrivingRestriction.NONE, state.sampleCount) }
+    fun `경과 시간은 샘플 수가 아니라 넘겨받은 시간을 쓴다`() {
+        val state = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .tick(DrivingRestriction.NONE, sampleCount = 15, elapsedSec = 3)
 
         assertEquals(3, state.elapsedSec)
+        assertEquals(15, state.sampleCount)
+    }
+
+    @Test
+    fun `시간을 넘기지 않으면 경과 시간을 유지한다`() {
+        val state = PracticeSessionState.initial()
+            .start(DrivingRestriction.NONE)
+            .tick(DrivingRestriction.NONE, sampleCount = 5, elapsedSec = 4)
+            .tick(DrivingRestriction.MINIMAL_UI, sampleCount = 5)
+
+        assertEquals(4, state.elapsedSec)
     }
 
     @Test

@@ -1,21 +1,18 @@
 package ai.tireon.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
-import ai.tireon.app.driving.DrivingMissionDisplay
 import ai.tireon.app.driving.DrivingMissionSelection
 import ai.tireon.core.mission.DrivingMission
 
@@ -30,76 +27,37 @@ internal fun DrivingMissionEntryScreen(
     onSelect: (DrivingMission?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = MISSION_CARD_MIN_WIDTH),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(TireonDimens.ScreenPadding),
+        horizontalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = stringResource(R.string.driving_mission_select_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Text(
-                    text = stringResource(R.string.driving_mission_select_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            ScreenHeader(
+                title = stringResource(R.string.driving_mission_select_title),
+                subtitle = stringResource(R.string.driving_mission_select_description),
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         }
 
         item(key = "skip") {
-            MissionOption(
+            MissionOptionCard(
+                icon = MissionIcons.of(DrivingMissionSelection.forSkip()),
                 name = stringResource(DrivingMissionSelection.skipNameResId()),
                 description = stringResource(DrivingMissionSelection.skipDescriptionResId()),
                 onClick = { onSelect(DrivingMissionSelection.forSkip()) },
+                highlighted = true,
             )
         }
 
         items(DrivingMissionSelection.all(), key = { it.mission.name }) { display ->
-            DrivingMissionOption(display = display, onClick = { onSelect(display.mission) })
-        }
-    }
-}
-
-@Composable
-private fun DrivingMissionOption(
-    display: DrivingMissionDisplay,
-    onClick: () -> Unit,
-) {
-    MissionOption(
-        name = stringResource(display.nameResId),
-        description = stringResource(display.descriptionResId),
-        onClick = onClick,
-    )
-}
-
-@Composable
-private fun MissionOption(
-    name: String,
-    description: String,
-    onClick: () -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            MissionOptionCard(
+                icon = MissionIcons.of(display.mission),
+                name = stringResource(display.nameResId),
+                description = stringResource(display.descriptionResId),
+                onClick = { onSelect(display.mission) },
             )
         }
     }

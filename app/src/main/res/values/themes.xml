@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.TIREON" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose 첫 프레임 전에 보이는 창 배경을 앱 배경색과 맞춘다. -->
+    <style name="Theme.TIREON" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/tireon_background</item>
+    </style>
 </resources>

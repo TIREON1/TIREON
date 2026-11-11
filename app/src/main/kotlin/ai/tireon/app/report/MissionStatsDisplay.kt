@@ -21,6 +21,8 @@ data class MissionStatsDisplay(
         val name: String,
         val rateText: String,
         val countText: String,
+        /** 막대 길이에 쓰는 성공률(0~100). */
+        val ratePercent: Int = 0,
     )
 
     companion object {
@@ -49,6 +51,7 @@ data class MissionStatsDisplay(
                         name = nameOf(score.mission),
                         rateText = "${score.successRate}%",
                         countText = "${score.successCount}번 성공 / ${score.total}번 시도",
+                        ratePercent = score.successRate,
                     )
                 },
             )
