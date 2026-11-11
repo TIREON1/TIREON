@@ -79,9 +79,9 @@ fun OnboardingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (index == 0) {
-                BrandMark(size = 88.dp)
+                BrandMark(size = 120.dp)
             } else {
-                IconBadge(icon = pageIcons[Onboarding.clamp(index)], size = 88.dp)
+                IconBadge(icon = pageIcons[Onboarding.clamp(index)], size = 120.dp)
             }
             Text(
                 text = stringResource(page.titleResId),

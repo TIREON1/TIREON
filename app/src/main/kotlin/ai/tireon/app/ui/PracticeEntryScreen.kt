@@ -53,7 +53,7 @@ internal fun PracticeEntryScreen(
     }
 }
 
-internal val MISSION_CARD_MIN_WIDTH = 320.dp
+internal val MISSION_CARD_MIN_WIDTH = 460.dp
 
 @Composable
 private fun PracticeMissionCard(display: MissionDisplay, onClick: () -> Unit) {
@@ -89,26 +89,16 @@ internal fun MissionOptionCard(
         ) {
             IconBadge(
                 icon = icon,
-                size = 56.dp,
-                tint = if (highlighted) {
-                    MaterialTheme.colorScheme.secondary
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                container = if (highlighted) {
-                    MaterialTheme.colorScheme.secondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
+                tint = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(text = name, style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

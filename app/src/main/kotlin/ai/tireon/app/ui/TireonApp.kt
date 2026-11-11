@@ -136,7 +136,7 @@ fun TireonApp(
             Row(modifier = Modifier.fillMaxSize()) {
                 NavigationRail(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    header = { BrandMark(modifier = Modifier.padding(vertical = 16.dp)) },
+                    header = { BrandMark(modifier = Modifier.padding(vertical = 24.dp)) },
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
                     destinations.forEach { destination ->
@@ -148,7 +148,7 @@ fun TireonApp(
                             onClick = { navigate(destination) },
                             icon = { DestinationIcon(destination) },
                             label = { Text(text = stringResource(destination.labelRes)) },
-                            modifier = Modifier.padding(vertical = 6.dp),
+                            modifier = Modifier.padding(vertical = 12.dp),
                         )
                     }
                 }
@@ -220,7 +220,7 @@ private fun DestinationIcon(destination: TireonDestination) {
     Icon(
         painter = painterResource(destination.iconRes),
         contentDescription = null,
-        modifier = Modifier.size(26.dp),
+        modifier = Modifier.size(36.dp),
     )
 }
 

@@ -60,12 +60,7 @@ fun DrivingSessionScreen(
 @Composable
 private fun ReadyContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
     CenteredColumn(modifier = modifier) {
-        IconBadge(
-            icon = R.drawable.ic_car,
-            size = 96.dp,
-            tint = MaterialTheme.colorScheme.secondary,
-            container = MaterialTheme.colorScheme.secondaryContainer,
-        )
+        IconBadge(icon = R.drawable.ic_car, size = 128.dp)
         Text(
             text = stringResource(R.string.driving_session_title),
             style = MaterialTheme.typography.headlineLarge,
@@ -154,7 +149,7 @@ private fun ResultContent(
                             stringResource(DrivingMissionSelection.of(mission).nameResId),
                         ),
                         icon = MissionIcons.of(mission),
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 result?.missionDetail?.let { detail ->

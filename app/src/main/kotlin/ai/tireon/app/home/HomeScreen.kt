@@ -145,7 +145,7 @@ private fun RecommendCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            IconBadge(icon = MissionIcons.of(mission), size = 56.dp)
+            IconBadge(icon = MissionIcons.of(mission), size = 80.dp)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -209,12 +209,7 @@ private fun StartCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            IconBadge(
-                icon = icon,
-                size = 56.dp,
-                tint = MaterialTheme.colorScheme.secondary,
-                container = MaterialTheme.colorScheme.secondaryContainer,
-            )
+            IconBadge(icon = icon)
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyLarge,

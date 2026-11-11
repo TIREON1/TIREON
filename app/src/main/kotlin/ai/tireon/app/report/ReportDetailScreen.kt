@@ -28,6 +28,7 @@ import ai.tireon.app.ui.SectionCard
 import ai.tireon.app.ui.StatTile
 import ai.tireon.app.ui.StatusChip
 import ai.tireon.app.ui.TireonDimens
+import ai.tireon.app.ui.theme.LocalStatusColors
 
 /**
  * 세션 상세 화면.
@@ -98,7 +99,7 @@ private fun ScoreSection(detail: ReportDetail) {
                 StatusChip(
                     text = kind.label(),
                     icon = kind.iconRes,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             ScoreRing(scoreText = detail.scoreText)
@@ -153,7 +154,7 @@ private fun EventsSection(detail: ReportDetail) {
                 Icon(
                     painter = painterResource(R.drawable.ic_check_circle),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = LocalStatusColors.current.good,
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
@@ -182,7 +183,7 @@ private fun MissionSection(label: String, detail: ReportDetail) {
             text = label,
             icon = if (detail.missionSuccess == false) R.drawable.ic_replay else R.drawable.ic_check_circle,
             color = when (detail.missionSuccess) {
-                true -> MaterialTheme.colorScheme.primary
+                true -> LocalStatusColors.current.good
                 false -> MaterialTheme.colorScheme.tertiary
                 null -> MaterialTheme.colorScheme.outline
             },

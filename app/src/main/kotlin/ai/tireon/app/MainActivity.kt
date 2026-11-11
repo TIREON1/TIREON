@@ -81,7 +81,7 @@ private fun PermissionRequired() {
     ) {
         IconBadge(
             icon = R.drawable.ic_speed,
-            size = 80.dp,
+            size = 112.dp,
             tint = MaterialTheme.colorScheme.tertiary,
             container = MaterialTheme.colorScheme.tertiaryContainer,
         )

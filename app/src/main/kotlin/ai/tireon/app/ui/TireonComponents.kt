@@ -47,22 +47,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
+import ai.tireon.app.ui.theme.LocalStatusColors
 import ai.tireon.core.analysis.Thresholds
 
 /**
  * 화면 공통 치수.
  *
- * Pleos 주의 분산 가이드는 큰 터치 타깃을 요구한다. 정확한 dp는 아직 문서로
- * 확인하지 못했으므로(설계 문서 9장) 주요 버튼은 넉넉하게 64dp로 둔다.
+ * Pleos Connect 디스플레이는 2560x1440 mdpi(160dpi)라 가이드의 px 값이 곧 dp다.
+ * 버튼은 가이드의 Medium 규격(높이 80, 모서리 16)을 쓴다.
  */
 internal object TireonDimens {
-    val ScreenPadding = 24.dp
-    val CardPadding = 20.dp
-    val Gap = 16.dp
-    val ActionHeight = 64.dp
+    val ScreenPadding = 40.dp
+    val CardPadding = 32.dp
+    val Gap = 24.dp
+    val ActionHeight = 80.dp
 
     /** 넓은 화면에서 한 열이 지나치게 늘어나지 않게 막는 폭. */
-    val ReadableWidth = 640.dp
+    val ReadableWidth = 960.dp
 }
 
 /** 점수 구간. 색만으로 구간을 전하지 않도록 화면은 숫자를 항상 함께 보여준다. */
@@ -79,9 +80,9 @@ internal fun scoreToneOf(score: Int?): ScoreTone = when {
 
 @Composable
 internal fun ScoreTone.color(): Color = when (this) {
-    ScoreTone.GOOD -> MaterialTheme.colorScheme.primary
-    ScoreTone.CAUTION -> MaterialTheme.colorScheme.tertiary
-    ScoreTone.LOW -> MaterialTheme.colorScheme.error
+    ScoreTone.GOOD -> LocalStatusColors.current.good
+    ScoreTone.CAUTION -> LocalStatusColors.current.caution
+    ScoreTone.LOW -> LocalStatusColors.current.bad
     ScoreTone.NONE -> MaterialTheme.colorScheme.outline
 }
 
@@ -98,19 +99,19 @@ internal fun SectionCard(
     val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier.padding(TireonDimens.CardPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             if (title != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (titleIcon != null) {
                         Icon(
                             painter = painterResource(titleIcon),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(28.dp),
                         )
                     }
                     Text(text = title, style = MaterialTheme.typography.titleMedium)
@@ -197,8 +198,8 @@ internal fun ScreenHeader(
 internal fun ScoreRing(
     scoreText: String?,
     modifier: Modifier = Modifier,
-    size: Dp = 180.dp,
-    strokeWidth: Dp = 14.dp,
+    size: Dp = 240.dp,
+    strokeWidth: Dp = 20.dp,
 ) {
     val score = scoreText?.toIntOrNull()
     val toneColor = scoreToneOf(score).color()
@@ -257,7 +258,7 @@ internal fun ScoreRing(
     }
 }
 
-private val LARGE_RING = 160.dp
+private val LARGE_RING = 200.dp
 private const val RING_START = 135f
 private const val RING_SWEEP = 270f
 
@@ -275,19 +276,19 @@ internal fun StatTile(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (icon != null) {
                     Icon(
                         painter = painterResource(icon),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 Text(
@@ -329,7 +330,7 @@ internal fun MeterBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(8.dp)
+            .height(12.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest),
     ) {
@@ -357,7 +358,7 @@ internal fun EventBars(
     modifier: Modifier = Modifier,
 ) {
     val max = lines.maxOfOrNull { it.second }?.coerceAtLeast(1) ?: 1
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         lines.forEach { (label, count) ->
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -388,8 +389,12 @@ internal fun TireonActionButton(
     @DrawableRes icon: Int? = null,
     style: ActionStyle = ActionStyle.PRIMARY,
 ) {
+    // Pleos 버튼 위계: 채움(button_filled = basic_600)을 주 동작에, 기본(basic_200)을 보조 동작에 쓴다.
     val colors = when (style) {
-        ActionStyle.PRIMARY -> ButtonDefaults.buttonColors()
+        ActionStyle.PRIMARY -> ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary,
+        )
         ActionStyle.SECONDARY -> ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -409,9 +414,9 @@ internal fun TireonActionButton(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(32.dp),
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
         }
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
@@ -422,9 +427,9 @@ internal fun TireonActionButton(
 internal fun IconBadge(
     @DrawableRes icon: Int,
     modifier: Modifier = Modifier,
-    size: Dp = 48.dp,
-    tint: Color = MaterialTheme.colorScheme.primary,
-    container: Color = MaterialTheme.colorScheme.primaryContainer,
+    size: Dp = 64.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    container: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     Box(
         modifier = modifier
@@ -456,15 +461,15 @@ internal fun StatusChip(
         color = color.copy(alpha = 0.16f),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(28.dp),
             )
             Text(
                 text = text,
@@ -477,7 +482,7 @@ internal fun StatusChip(
 
 /** 내비게이션 상단의 브랜드 표시. */
 @Composable
-internal fun BrandMark(modifier: Modifier = Modifier, size: Dp = 44.dp) {
+internal fun BrandMark(modifier: Modifier = Modifier, size: Dp = 64.dp) {
     Box(
         modifier = modifier
             .size(size)
@@ -521,11 +526,11 @@ internal fun ScoreTrendChart(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .height(240.dp)
             .semantics { contentDescription = summary },
     ) {
-        val axisWidth = 32.dp.toPx()
-        val topPad = 24.dp.toPx()
+        val axisWidth = 48.dp.toPx()
+        val topPad = 36.dp.toPx()
         val chartHeight = size.height - topPad
         val chartWidth = size.width - axisWidth
 
@@ -546,8 +551,8 @@ internal fun ScoreTrendChart(
 
         if (scores.isEmpty()) return@Canvas
         val slot = chartWidth / scores.size
-        val barWidth = minOf(slot * 0.56f, 28.dp.toPx())
-        val radius = 4.dp.toPx()
+        val barWidth = minOf(slot * 0.56f, 40.dp.toPx())
+        val radius = 6.dp.toPx()
 
         scores.forEachIndexed { index, score ->
             val value = score.coerceIn(0, 100)

@@ -66,7 +66,7 @@ fun ReportScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            IconBadge(icon = R.drawable.ic_report, size = 80.dp)
+            IconBadge(icon = R.drawable.ic_report, size = 112.dp)
             Text(
                 text = stringResource(R.string.report_title),
                 style = MaterialTheme.typography.headlineLarge,
@@ -181,7 +181,7 @@ private fun RecordCard(record: DrivingSessionRecord, onClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .width(6.dp)
-                    .height(56.dp)
+                    .height(72.dp)
                     .clip(CircleShape)
                     .background(scoreToneOf(record.score).color()),
             )
@@ -197,7 +197,7 @@ private fun RecordCard(record: DrivingSessionRecord, onClick: () -> Unit) {
                     Icon(
                         painter = painterResource(kind.iconRes),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )
                     Text(

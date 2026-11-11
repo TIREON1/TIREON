@@ -34,6 +34,7 @@ import ai.tireon.app.ui.SectionCard
 import ai.tireon.app.ui.StatusChip
 import ai.tireon.app.ui.TireonActionButton
 import ai.tireon.app.ui.TireonDimens
+import ai.tireon.app.ui.theme.LocalStatusColors
 import ai.tireon.core.coach.CoachMessage
 import ai.tireon.core.coach.Severity
 
@@ -91,7 +92,7 @@ private fun ReadyContent(
     modifier: Modifier = Modifier,
 ) {
     CenteredColumn(modifier = modifier) {
-        IconBadge(icon = MissionIcons.of(mission.mission), size = 96.dp)
+        IconBadge(icon = MissionIcons.of(mission.mission), size = 128.dp)
         Text(
             text = stringResource(mission.nameResId),
             style = MaterialTheme.typography.headlineLarge,
@@ -126,7 +127,7 @@ private fun MinimalContent(speedText: String?, modifier: Modifier = Modifier) {
         if (speedText != null) {
             Text(
                 text = speedText,
-                style = MaterialTheme.typography.displayLarge.copy(fontSize = 120.sp, lineHeight = 124.sp),
+                style = MaterialTheme.typography.displayLarge.copy(fontSize = 160.sp, lineHeight = 168.sp),
             )
             Text(
                 text = stringResource(R.string.practice_speed_unit),
@@ -163,7 +164,7 @@ private fun RunningContent(
         )
         Text(
             text = stringResource(R.string.practice_elapsed, elapsedSec),
-            style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp, lineHeight = 100.sp),
+            style = MaterialTheme.typography.displayLarge.copy(fontSize = 120.sp, lineHeight = 128.sp),
         )
         Text(
             text = stringResource(R.string.practice_sample_count, sampleCount),
@@ -280,7 +281,7 @@ internal fun MissionResultChip(success: Boolean?, modifier: Modifier = Modifier)
         true -> StatusChip(
             text = stringResource(R.string.mission_success),
             icon = R.drawable.ic_check_circle,
-            color = MaterialTheme.colorScheme.primary,
+            color = LocalStatusColors.current.good,
             modifier = modifier,
         )
         false -> StatusChip(
@@ -308,9 +309,9 @@ private fun CoachCard(messages: List<CoachMessage>) {
         messages.forEach { message ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 val color = when (message.severity) {
-                    Severity.GOOD -> MaterialTheme.colorScheme.primary
-                    Severity.WARN -> MaterialTheme.colorScheme.tertiary
-                    Severity.CRITICAL -> MaterialTheme.colorScheme.error
+                    Severity.GOOD -> LocalStatusColors.current.good
+                    Severity.WARN -> LocalStatusColors.current.caution
+                    Severity.CRITICAL -> LocalStatusColors.current.bad
                 }
                 Box(
                     modifier = Modifier
