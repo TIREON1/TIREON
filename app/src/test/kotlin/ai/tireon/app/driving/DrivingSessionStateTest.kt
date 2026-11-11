@@ -46,6 +46,16 @@ class DrivingSessionStateTest {
     }
 
     @Test
+    fun `정차 중 수집하면 종료 화면을 보여준다`() {
+        val state = DrivingSessionState.initial()
+            .start(DrivingRestriction.MINIMAL_UI)
+            .tick(DrivingRestriction.NONE, sampleCount = 10)
+
+        assertEquals(DrivingSessionPhase.COLLECTING, state.phase)
+        assertFalse(state.hideUi)
+    }
+
+    @Test
     fun `정차하면 결과를 볼 수 있다`() {
         val state = DrivingSessionState.initial()
             .start(DrivingRestriction.MINIMAL_UI)

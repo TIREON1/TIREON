@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +17,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
+import ai.tireon.app.ui.EventBars
+import ai.tireon.app.ui.ScoreRing
+import ai.tireon.app.ui.ScreenHeader
+import ai.tireon.app.ui.SectionCard
+import ai.tireon.app.ui.StatTile
+import ai.tireon.app.ui.TireonDimens
 
 /**
  * 기간별 통계 화면.
@@ -45,14 +50,11 @@ fun StatsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(TireonDimens.ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = stringResource(R.string.stats_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
+        ScreenHeader(title = stringResource(R.string.stats_title))
 
         ScoreCard(display = display)
         SummaryCard(display = display)
@@ -80,7 +82,7 @@ fun StatsSection(
     ) {
         Text(
             text = stringResource(R.string.stats_title),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
         )
 
         ScoreCard(display = display)
@@ -115,80 +117,28 @@ private fun EmptyStats(
 
 @Composable
 private fun ScoreCard(display: StatsDisplay) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+    SectionCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Text(
-                text = stringResource(R.string.stats_average_score),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            display.averageText?.let { score ->
-                Text(text = score, style = MaterialTheme.typography.displayLarge)
-            }
-            display.changeText?.let { change ->
+            ScoreRing(scoreText = display.averageText, size = 128.dp, strokeWidth = 10.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
-                    text = change,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SummaryCard(display: StatsDisplay) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            InfoRow(
-                label = stringResource(R.string.stats_session_count),
-                value = display.sessionText,
-            )
-            InfoRow(
-                label = stringResource(R.string.stats_total_distance),
-                value = display.distanceText,
-            )
-            InfoRow(
-                label = stringResource(R.string.stats_total_events),
-                value = display.eventText,
-            )
-        }
-    }
-}
-
-@Composable
-private fun EventsCard(display: StatsDisplay) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.stats_event_breakdown),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            if (display.topEvents.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.stats_no_events),
+                    text = stringResource(R.string.stats_average_score),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            } else {
-                display.topEvents.forEach { line ->
-                    InfoRow(label = line.label, value = "${line.count}회")
+                display.changeText?.let { change ->
+                    Text(
+                        text = change,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
         }
@@ -196,16 +146,49 @@ private fun EventsCard(display: StatsDisplay) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String?) {
+private fun SummaryCard(display: StatsDisplay) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        StatTile(
+            label = stringResource(R.string.stats_session_count),
+            value = display.sessionText ?: "-",
+            icon = R.drawable.ic_car,
+            modifier = Modifier.weight(1f),
         )
-        Text(text = value ?: "-", style = MaterialTheme.typography.bodyMedium)
+        StatTile(
+            label = stringResource(R.string.stats_total_distance),
+            value = display.distanceText ?: "-",
+            icon = R.drawable.ic_place,
+            modifier = Modifier.weight(1f),
+        )
+        StatTile(
+            label = stringResource(R.string.stats_total_events),
+            value = display.eventText ?: "-",
+            icon = R.drawable.ic_warning,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun EventsCard(display: StatsDisplay) {
+    SectionCard(
+        modifier = Modifier.fillMaxWidth(),
+        title = stringResource(R.string.stats_event_breakdown),
+    ) {
+        if (display.topEvents.isEmpty()) {
+            Text(
+                text = stringResource(R.string.stats_no_events),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            EventBars(
+                lines = display.topEvents.map { it.label to it.count },
+                countText = { "${it}회" },
+            )
+        }
     }
 }

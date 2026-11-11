@@ -21,7 +21,7 @@ interface PleosSignalSource {
 }
 
 /**
- * AAOS 표준 프로퍼티와 Pleos Vehicle SDK를 묶어 1Hz 샘플을 만든다.
+ * AAOS 표준 프로퍼티와 Pleos Vehicle SDK를 묶어 10Hz 샘플을 만든다.
  *
  * 속도와 기어는 AAOS에서, 조향과 방향지시등, 브레이크는 Pleos SDK에서 받는다.
  * 한쪽이 실패해도 나머지 신호는 계속 수집한다. 없는 값은 null로 남는다.
@@ -84,8 +84,19 @@ class DefaultPleosSignalSource(
         }
     }
 
-    private companion object {
-        const val TAG = "PleosSignalSource"
-        const val DEFAULT_INTERVAL_MS = 1_000L
+    internal companion object {
+        private const val TAG = "PleosSignalSource"
+
+        /**
+         * 샘플 간격.
+         *
+         * `EventDetector`는 간격이 `Thresholds.MAX_SAMPLE_GAP_MS`(500ms)를 넘는 샘플 쌍으로는
+         * 가속도와 조향 속도를 계산하지 않는다. 1초 간격이면 급가속·급제동·급조향이
+         * 한 번도 잡히지 않는다.
+         *
+         * 판정 임계값과 이동평균 창(5쌍 = 0.5초)은 100ms 간격 데이터로 맞추고 시험했으므로
+         * 같은 간격을 쓴다. 속도 콜백이 10Hz로 들어오므로(AaosSpeedReader) 매 샘플이 새 값이다.
+         */
+        const val DEFAULT_INTERVAL_MS = 100L
     }
 }

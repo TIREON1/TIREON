@@ -1,6 +1,7 @@
 package ai.tireon.app.driving
 
 import ai.tireon.app.report.SessionRepositoryProvider
+import ai.tireon.app.ui.theme.TireonSurface
 import ai.tireon.app.ui.theme.TireonTheme
 import ai.tireon.core.mission.DrivingMission
 import android.content.Context
@@ -12,8 +13,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 /**
  * 주행 세션 액티비티.
@@ -25,7 +28,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  */
 class DrivingSessionActivity : ComponentActivity() {
 
-    private var session: VehicleSession? = null
+    // 차량 세션은 ViewModel과 수명을 같이한다. 화면 회전이나 창 크기 변경으로
+    // 액티비티가 다시 만들어져도 수집 중인 세션이 해제되지 않게 하기 위함이다.
+    private val viewModel: DrivingSessionViewModel by viewModels {
+        viewModelFactory {
+            initializer {
+                val session = VehicleSession(applicationContext)
+                DrivingSessionViewModel(
+                    signalSource = DefaultPleosSignalSource(applicationContext, session),
+                    restrictionMonitor = RestrictionMonitor(applicationContext),
+                    repository = SessionRepositoryProvider.get(applicationContext),
+                    mission = intent.mission(),
+                ).apply {
+                    addCloseable { session.release() }
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,36 +56,22 @@ class DrivingSessionActivity : ComponentActivity() {
             return
         }
 
-        val vehicleSession = VehicleSession(applicationContext)
-        session = vehicleSession
-
-        val signalSource = DefaultPleosSignalSource(applicationContext, vehicleSession)
-        val restrictionMonitor = RestrictionMonitor(applicationContext)
-        val repository = SessionRepositoryProvider.get(applicationContext)
-        val mission = intent.mission()
-
         setContent {
             TireonTheme {
-                val viewModel: DrivingSessionViewModel = viewModel(
-                    factory = DrivingSessionViewModel.Factory(
-                        signalSource = signalSource,
-                        restrictionMonitor = restrictionMonitor,
-                        repository = repository,
-                        mission = mission,
-                    ),
-                )
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val result = viewModel.result.collectAsStateWithLifecycle()
                 val saveStatus = viewModel.saveStatus.collectAsStateWithLifecycle()
 
-                DrivingSessionScreen(
-                    state = state.value,
-                    result = result.value,
-                    saveStatus = saveStatus.value,
-                    onStart = viewModel::start,
-                    onStop = viewModel::requestStop,
-                    onClose = { finish() },
-                )
+                TireonSurface {
+                    DrivingSessionScreen(
+                        state = state.value,
+                        result = result.value,
+                        saveStatus = saveStatus.value,
+                        onStart = viewModel::start,
+                        onStop = viewModel::requestStop,
+                        onClose = { finish() },
+                    )
+                }
             }
         }
     }
@@ -88,12 +93,6 @@ class DrivingSessionActivity : ComponentActivity() {
             getStringExtra(EXTRA_MISSION)?.let { name ->
                 DrivingMission.entries.firstOrNull { it.name == name }
             }
-    }
-
-    override fun onDestroy() {
-        session?.release()
-        session = null
-        super.onDestroy()
     }
 
     private fun hasSpeedPermission(): Boolean =

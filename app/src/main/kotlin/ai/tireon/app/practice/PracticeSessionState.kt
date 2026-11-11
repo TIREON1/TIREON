@@ -34,11 +34,19 @@ data class PracticeSessionState(
         )
     }
 
-    fun tick(restriction: DrivingRestriction?, sampleCount: Int): PracticeSessionState {
+    /**
+     * @param elapsedSec 시작 후 흐른 실제 시간. 샘플 수로 세면 수집 주기가 바뀔 때
+     *   시간이 함께 틀어지므로 호출 측이 시계로 잰 값을 넘긴다.
+     */
+    fun tick(
+        restriction: DrivingRestriction?,
+        sampleCount: Int,
+        elapsedSec: Int = this.elapsedSec,
+    ): PracticeSessionState {
         if (phase != PracticePhase.RUNNING) return this
         return copy(
             restriction = normalize(restriction),
-            elapsedSec = elapsedSec + 1,
+            elapsedSec = elapsedSec,
             sampleCount = sampleCount,
         )
     }

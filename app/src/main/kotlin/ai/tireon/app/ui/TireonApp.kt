@@ -3,8 +3,12 @@ package ai.tireon.app.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,7 +22,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -62,11 +68,16 @@ fun TireonApp(
         viewModel(factory = ai.tireon.app.report.ReportViewModel.Factory(repository))
     val reportState by reportViewModel.state.collectAsStateWithLifecycle()
 
-    val settingsViewModel: ai.tireon.app.settings.SettingsViewModel = viewModel(
-        factory = ai.tireon.app.settings.SettingsViewModel.Factory(
+    // 차량 세션은 ViewModel이 처음 만들어질 때 한 번만 연다. 재구성마다 만들면
+    // 쓰이지 않는 세션 객체가 계속 생긴다.
+    val settingsFactory = androidx.compose.runtime.remember(context) {
+        ai.tireon.app.settings.SettingsViewModel.Factory(
             appVersion = ai.tireon.app.BuildConfig.VERSION_NAME,
-            infoSource = ai.tireon.pleos.vehicle.PleosVehicleInfoSource(context),
-        ),
+            infoSource = { ai.tireon.pleos.vehicle.PleosVehicleInfoSource(context.applicationContext) },
+        )
+    }
+    val settingsViewModel: ai.tireon.app.settings.SettingsViewModel = viewModel(
+        factory = settingsFactory,
     )
     val settingsInfo by settingsViewModel.info.collectAsStateWithLifecycle()
 
@@ -82,6 +93,7 @@ fun TireonApp(
     // 통계와 목록이 최신 상태가 된다. ViewModel은 화면 전환에도 살아있으므로
     // 생성자에서 한 번 읽는 것만으로는 부족하다.
     LifecycleResumeEffect(Unit) {
+        homeViewModel.refresh()
         reportViewModel.refresh()
         statsViewModel.refresh()
         onPauseOrDispose { }
@@ -122,7 +134,11 @@ fun TireonApp(
 
         if (layout == WindowLayout.EXPANDED) {
             Row(modifier = Modifier.fillMaxSize()) {
-                NavigationRail {
+                NavigationRail(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    header = { BrandMark(modifier = Modifier.padding(vertical = 24.dp)) },
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     destinations.forEach { destination ->
                         val selected = currentRoute?.hierarchy?.any {
                             it.route == destination.route
@@ -130,13 +146,9 @@ fun TireonApp(
                         NavigationRailItem(
                             selected = selected,
                             onClick = { navigate(destination) },
-                            icon = {
-                                Text(
-                                    text = destination.glyph,
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                            },
+                            icon = { DestinationIcon(destination) },
                             label = { Text(text = stringResource(destination.labelRes)) },
+                            modifier = Modifier.padding(vertical = 12.dp),
                         )
                     }
                 }
@@ -162,8 +174,9 @@ fun TireonApp(
             }
         } else {
             Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
                 bottomBar = {
-                    NavigationBar {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                         destinations.forEach { destination ->
                             val selected = currentRoute?.hierarchy?.any {
                                 it.route == destination.route
@@ -171,12 +184,7 @@ fun TireonApp(
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = { navigate(destination) },
-                                icon = {
-                                    Text(
-                                        text = destination.glyph,
-                                        style = MaterialTheme.typography.titleMedium,
-                                    )
-                                },
+                                icon = { DestinationIcon(destination) },
                                 label = { Text(text = stringResource(destination.labelRes)) },
                             )
                         }
@@ -205,6 +213,15 @@ fun TireonApp(
             }
         }
     }
+}
+
+@Composable
+private fun DestinationIcon(destination: TireonDestination) {
+    Icon(
+        painter = painterResource(destination.iconRes),
+        contentDescription = null,
+        modifier = Modifier.size(36.dp),
+    )
 }
 
 @Composable

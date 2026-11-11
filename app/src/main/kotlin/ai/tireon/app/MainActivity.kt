@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +25,9 @@ import ai.tireon.app.onboarding.OnboardingStore
 import ai.tireon.app.onboarding.PrefsOnboardingStore
 import ai.tireon.app.permission.SpeedPermission
 import ai.tireon.app.permission.rememberSpeedPermissionState
+import ai.tireon.app.ui.IconBadge
 import ai.tireon.app.ui.TireonApp
+import ai.tireon.app.ui.theme.TireonSurface
 import ai.tireon.app.ui.theme.TireonTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +36,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TireonTheme {
-                TireonRoot()
+                TireonSurface {
+                    TireonRoot()
+                }
             }
         }
     }
@@ -69,30 +72,34 @@ private fun TireonRoot() {
 
 @Composable
 private fun PermissionRequired() {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = "권한이 필요해요",
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Text(
-                text = SpeedPermission.DENIED_MESSAGE,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = "설정에서 차량 속도 권한을 허용한 뒤 앱을 다시 실행해 주세요.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        IconBadge(
+            icon = R.drawable.ic_speed,
+            size = 112.dp,
+            tint = MaterialTheme.colorScheme.tertiary,
+            container = MaterialTheme.colorScheme.tertiaryContainer,
+        )
+        Text(
+            text = "권한이 필요해요",
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        Text(
+            text = SpeedPermission.DENIED_MESSAGE,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = "설정에서 차량 속도 권한을 허용한 뒤 앱을 다시 실행해 주세요.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }

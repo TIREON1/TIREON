@@ -69,6 +69,19 @@ class DrivingSessionScreenTest {
     }
 
     @Test
+    fun 정차_중_수집하면_종료_버튼이_동작한다() {
+        var stopped = false
+        val collecting = DrivingSessionState.initial()
+            .start(DrivingRestriction.NONE)
+
+        setScreen(collecting, onStop = { stopped = true })
+
+        composeRule.onNodeWithText("주행 종료").performClick()
+
+        assertTrue(stopped)
+    }
+
+    @Test
     fun 완료_상태는_점수와_지표를_보여준다() {
         val finished = DrivingSessionState.initial()
             .start(DrivingRestriction.NONE)

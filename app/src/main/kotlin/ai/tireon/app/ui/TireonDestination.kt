@@ -1,5 +1,6 @@
 package ai.tireon.app.ui
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import ai.tireon.app.R
 
@@ -7,10 +8,10 @@ import ai.tireon.app.R
 enum class TireonDestination(
     val route: String,
     @StringRes val labelRes: Int,
-    val glyph: String,
+    @DrawableRes val iconRes: Int,
 ) {
-    HOME("home", R.string.nav_home, "H"),
-    PRACTICE("practice", R.string.nav_practice, "P"),
-    REPORT("report", R.string.nav_report, "R"),
-    SETTINGS("settings", R.string.nav_settings, "S"),
+    HOME("home", R.string.nav_home, R.drawable.ic_home),
+    PRACTICE("practice", R.string.nav_practice, R.drawable.ic_practice),
+    REPORT("report", R.string.nav_report, R.drawable.ic_report),
+    SETTINGS("settings", R.string.nav_settings, R.drawable.ic_settings),
 }

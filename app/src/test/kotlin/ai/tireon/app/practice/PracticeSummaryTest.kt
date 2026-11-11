@@ -9,6 +9,7 @@ import ai.tireon.core.driving.DrivingEventType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PracticeSummaryTest {
 
@@ -29,6 +30,28 @@ class PracticeSummaryTest {
         assertEquals("88", summary.scoreText)
         assertEquals(1, summary.eventCount)
         assertEquals("연습이 끝났어요", summary.message)
+    }
+
+    @Test
+    fun `점수가 나오면 측정 근거가 붙은 코칭 문장을 싣는다`() {
+        val summary = PracticeSummary.from(
+            result = ScoreResult.Scored(DrivingScore(88), emptyList()),
+            events = listOf(event(DrivingEventType.HARSH_BRAKE)),
+        )
+
+        val brake = summary.coachMessages.first()
+        assertTrue(brake.text.startsWith("급제동이 1번"))
+        assertTrue(brake.evidence.orEmpty().endsWith("(측정)"))
+    }
+
+    @Test
+    fun `점수가 없으면 코칭 문장을 싣지 않는다`() {
+        val summary = PracticeSummary.from(
+            result = ScoreResult.Insufficient(InsufficientReason.DURATION_TOO_SHORT),
+            events = emptyList(),
+        )
+
+        assertTrue(summary.coachMessages.isEmpty())
     }
 
     @Test

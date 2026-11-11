@@ -11,7 +11,7 @@ enum class DrivingSessionPhase { READY, COLLECTING, FINISHED }
  * 연습 세션과 다른 점은 주행 중 화면을 띄우지 않는다는 것이다. 실도로 주행 중
  * 화면을 보여주면 안전 규정 위반이고, 보여줄 것도 없다.
  *
- * 수집은 계속하고, 정차 후 결과를 본다.
+ * 수집은 계속하고, 정차해 제한이 풀리면 종료 버튼으로 결과를 본다.
  */
 data class DrivingSessionState(
     val phase: DrivingSessionPhase,
@@ -25,10 +25,12 @@ data class DrivingSessionState(
     /**
      * 화면을 숨겨야 하는지.
      *
-     * 수집 중이면 항상 숨긴다. 제한 상태를 몰라도 마찬가지다.
+     * 수집 중 제한이 걸려 있으면 숨긴다. 제한 상태를 모르는 경우도 걸린 것으로 본다.
+     * 정차해 제한이 풀리면 종료 버튼만 있는 화면을 보여준다. 수집 중 화면을 아예
+     * 그리지 않으면 세션을 끝낼 방법이 없어 결과와 리포트로 넘어갈 수 없다.
      */
     val hideUi: Boolean
-        get() = phase == DrivingSessionPhase.COLLECTING
+        get() = phase == DrivingSessionPhase.COLLECTING && restriction != DrivingRestriction.NONE
 
     fun start(restriction: DrivingRestriction?): DrivingSessionState {
         if (phase != DrivingSessionPhase.READY) return this

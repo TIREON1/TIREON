@@ -1,20 +1,29 @@
 package ai.tireon.app.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ai.tireon.app.R
+import ai.tireon.app.ui.InfoRow
+import ai.tireon.app.ui.ScreenHeader
+import ai.tireon.app.ui.SectionCard
+import ai.tireon.app.ui.TireonDimens
 
 /** 설정 화면. 앱 정보, 차량 정보, 안전 고지를 보여준다. */
 @Composable
@@ -26,74 +35,85 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(TireonDimens.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
     ) {
-        InfoCard(title = stringResource(R.string.settings_app_section)) {
-            InfoRow(
-                label = stringResource(R.string.settings_app_version),
-                value = info.appVersion,
-            )
-        }
+        ScreenHeader(title = stringResource(R.string.settings_title))
 
-        InfoCard(title = stringResource(R.string.settings_vehicle_section)) {
-            InfoRow(
-                label = stringResource(R.string.settings_connection),
-                value = info.connectionText,
-            )
-            InfoRow(
-                label = stringResource(R.string.settings_vin),
-                value = info.vinText,
-            )
-        }
+        Column(
+            modifier = Modifier.widthIn(max = 840.dp),
+            verticalArrangement = Arrangement.spacedBy(TireonDimens.Gap),
+        ) {
+            SectionCard(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResource(R.string.settings_vehicle_section),
+                titleIcon = R.drawable.ic_car,
+            ) {
+                InfoRow(
+                    label = stringResource(R.string.settings_connection),
+                    value = info.connectionText,
+                )
+                InfoRow(
+                    label = stringResource(R.string.settings_vin),
+                    value = info.vinText,
+                )
+            }
 
-        if (onShowOnboarding != null) {
-            InfoCard(title = stringResource(R.string.settings_guide_section)) {
-                Card(
-                    onClick = onShowOnboarding,
+            SectionCard(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResource(R.string.settings_app_section),
+                titleIcon = R.drawable.ic_info,
+            ) {
+                InfoRow(
+                    label = stringResource(R.string.settings_app_version),
+                    value = info.appVersion,
+                )
+            }
+
+            if (onShowOnboarding != null) {
+                SectionCard(
                     modifier = Modifier.fillMaxWidth(),
+                    onClick = onShowOnboarding,
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_guide_section),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_onboarding),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        Icon(
+                            painter = painterResource(R.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            }
+
+            SectionCard(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResource(R.string.settings_safety_section),
+                titleIcon = R.drawable.ic_shield,
+            ) {
+                SettingsInfo.safetyNotices().forEach { notice ->
                     Text(
-                        text = stringResource(R.string.settings_onboarding),
+                        text = "• $notice",
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
-
-        InfoCard(title = stringResource(R.string.settings_safety_section)) {
-            SettingsInfo.safetyNotices().forEach { notice ->
-                Text(
-                    text = "• $notice",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
     }
-}
-
-@Composable
-private fun InfoCard(title: String, content: @Composable () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium)
-            content()
-        }
-    }
-}
-
-@Composable
-private fun InfoRow(label: String, value: String) {
-    Text(
-        text = "$label: $value",
-        style = MaterialTheme.typography.bodyMedium,
-    )
 }

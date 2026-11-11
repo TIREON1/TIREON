@@ -14,9 +14,9 @@ import ai.tireon.core.report.SessionRepository
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.PleosSignalSource
+import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,11 +62,16 @@ class DrivingSessionViewModel(
     private var sessionJob: Job? = null
     private var latestRestriction: DrivingRestriction? = null
     private var startedAtMs = 0L
+    private var startedRealtimeMs = 0L
+
+    /** 종료 시점에 시계로 잰 주행 시간. 샘플 수로 세면 수집 주기에 따라 틀어진다. */
+    private var durationSec = 0
 
     fun start() {
         if (_state.value.phase != DrivingSessionPhase.READY) return
 
         startedAtMs = System.currentTimeMillis()
+        startedRealtimeMs = SystemClock.elapsedRealtime()
         samples.clear()
         _result.value = null
         _state.value = _state.value.start(latestRestriction)
@@ -101,6 +106,7 @@ class DrivingSessionViewModel(
         sessionActive.value = false
         sessionJob?.cancel()
         sessionJob = null
+        durationSec = ((SystemClock.elapsedRealtime() - startedRealtimeMs) / 1000).toInt()
         _state.value = finished
         _result.value = buildResult()
     }
@@ -114,7 +120,6 @@ class DrivingSessionViewModel(
     private fun buildResult(): DrivingSessionResult {
         val events = EventDetector().detect(samples)
         val distanceKm = DistanceEstimator.estimateKm(samples)
-        val durationSec = _state.value.sampleCount
 
         val scoreResult = ScoreCalculator().calculate(
             events = events,
@@ -166,7 +171,7 @@ class DrivingSessionViewModel(
         val record = SessionRecordFactory.create(
             id = "driving-$startedAtMs",
             startedAtMs = startedAtMs,
-            durationSec = _state.value.sampleCount,
+            durationSec = durationSec,
             distanceKm = if (distanceKm > 0f) distanceKm else null,
             result = result,
             events = events,
@@ -179,17 +184,6 @@ class DrivingSessionViewModel(
         }
     }
 
-
-    class Factory(
-        private val signalSource: PleosSignalSource,
-        private val restrictionMonitor: RestrictionMonitor,
-        private val repository: SessionRepository,
-        private val mission: DrivingMission? = null,
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            DrivingSessionViewModel(signalSource, restrictionMonitor, repository, mission) as T
-    }
 
     private companion object {
         const val TAG = "DrivingSessionViewModel"

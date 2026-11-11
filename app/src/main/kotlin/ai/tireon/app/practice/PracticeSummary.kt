@@ -1,6 +1,8 @@
 package ai.tireon.app.practice
 
 import ai.tireon.core.analysis.InsufficientReason
+import ai.tireon.core.coach.CoachMessage
+import ai.tireon.core.coach.CoachMessages
 import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.DrivingEvent
@@ -18,6 +20,8 @@ data class PracticeSummary(
     val missionSuccess: Boolean? = null,
     /** 미션 판정 상세 문구. */
     val missionDetail: String? = null,
+    /** 측정 근거가 붙은 코칭 문장. 음성으로 읽는 문장과 같다. */
+    val coachMessages: List<CoachMessage> = emptyList(),
 ) {
     companion object {
 
@@ -45,8 +49,10 @@ data class PracticeSummary(
                     eventCount = events.size,
                     missionSuccess = success,
                     missionDetail = detail,
+                    coachMessages = CoachMessages().build(events, result),
                 )
 
+                // 부족 사유는 message가 이미 안내하므로 코칭 문장을 겹쳐 싣지 않는다.
                 is ScoreResult.Insufficient -> PracticeSummary(
                     scoreText = null,
                     message = messageOf(result.reason),

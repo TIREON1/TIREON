@@ -22,6 +22,10 @@ data class ReportDetail(
     val events: List<EventLine>,
     val missionLabel: String?,
     val missionDetail: String?,
+    /** 미션 달성 여부. [missionLabel]의 아이콘과 색을 고르는 데 쓴다. */
+    val missionSuccess: Boolean? = null,
+    /** 연습인지 주행인지와 고른 미션. */
+    val kind: SessionKind? = null,
 ) {
     companion object {
 
@@ -52,6 +56,8 @@ data class ReportDetail(
                 null -> null
             },
             missionDetail = record.missionDetail,
+            missionSuccess = record.missionSuccess,
+            kind = SessionKind.of(record),
         )
 
         private fun reasonOf(reason: String?): String = when (reason) {

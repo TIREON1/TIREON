@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TIREON</string>
-    <string name="distance_driven">누적 주행 거리: %1$s</string>
-    <string name="trip_driving_time">트립 주행 시간: %1$s</string>
+    <string name="distance_driven">누적 주행 거리</string>
+    <string name="trip_driving_time">트립 주행 시간</string>
     <string name="value_unavailable">사용할 수 없음</string>
     <string name="action_refresh">새로고침</string>
     <string name="action_start">연습 시작</string>
@@ -63,6 +63,10 @@
     <string name="driving_session_title">주행 기록</string>
     <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 주행 중에는 화면이 꺼집니다.</string>
     <string name="driving_session_start">주행 기록 시작</string>
+    <string name="driving_session_recording">기록 중</string>
+    <string name="driving_session_recording_title">주행을 기록하고 있어요</string>
+    <string name="driving_session_recording_body">주행을 마쳤다면 종료하고 결과를 확인하세요. 차가 움직이면 화면이 가려집니다.</string>
+    <string name="driving_session_stop">주행 종료</string>
 
     <string name="driving_mission_select_title">주행 미션을 골라주세요</string>
     <string name="driving_mission_select_description">고른 미션에 맞춰 주행을 분석합니다. 미션 없이 주행해도 기록은 남습니다.</string>
@@ -104,4 +108,20 @@
     <string name="stats_total_events">발생 이벤트</string>
     <string name="stats_event_breakdown">이벤트 종류</string>
     <string name="stats_no_events">기록된 이벤트가 없어요</string>
+    <string name="home_greeting">오늘도 안전하게 달려볼까요</string>
+    <string name="home_drive_description">실도로 주행을 기록하고 리포트를 받아요</string>
+    <string name="home_practice_description">공터에서 미션으로 기본기를 다져요</string>
+    <string name="home_recommend_badge">최근 기록 기반</string>
+
+    <string name="practice_entry_subtitle">한 번에 한 가지 습관만 집중해서 연습해요</string>
+    <string name="practice_running">연습 중</string>
+    <string name="practice_running_hint">급가속·급제동이 감지되면 음성으로 알려드려요</string>
+    <string name="practice_speed_unit">km/h</string>
+    <string name="coach_title">코치 피드백</string>
+
+    <string name="report_trend_title">최근 점수</string>
+    <string name="report_records_title">최근 기록</string>
+    <string name="report_kind_practice">연습</string>
+    <string name="report_kind_driving">주행</string>
+    <string name="settings_title">설정</string>
 </resources>
