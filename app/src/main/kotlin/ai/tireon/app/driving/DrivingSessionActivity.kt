@@ -1,5 +1,6 @@
 package ai.tireon.app.driving
 
+import ai.tireon.app.permission.NotificationPermission
 import ai.tireon.app.report.SessionRepositoryProvider
 import ai.tireon.app.ui.theme.TireonSurface
 import ai.tireon.app.ui.theme.TireonTheme
@@ -7,6 +8,8 @@ import ai.tireon.core.mission.DrivingMission
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
@@ -15,7 +18,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -50,6 +55,16 @@ class DrivingSessionActivity : ComponentActivity() {
         }
     }
 
+    /** 기록 중 알림 권한 요청. 거부해도 기록 자체는 계속한다. */
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (!granted) {
+            Log.i(TAG, "알림 권한이 거부되어 기록 중 알림을 표시하지 않습니다.")
+        }
+        beginRecording()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,11 +86,7 @@ class DrivingSessionActivity : ComponentActivity() {
                         state = state.value,
                         result = result.value,
                         saveStatus = saveStatus.value,
-                        onStart = {
-                            viewModel.start()
-                            DrivingRecordService.start(this@DrivingSessionActivity)
-                            openNavigation()
-                        },
+                        onStart = { startRecording() },
                         onStop = {
                             viewModel.requestStop()
                             // 제한이 걸린 상태면 종료되지 않고 수집이 이어진다.
@@ -89,6 +100,37 @@ class DrivingSessionActivity : ComponentActivity() {
             }
         }
     }
+
+    /**
+     * 기록을 시작하고 내비게이션으로 넘어간다.
+     *
+     * Android 13부터는 알림 권한이 있어야 포그라운드 서비스 알림이 보인다. 권한이
+     * 없으면 먼저 요청하고, 응답을 받은 뒤 수집과 서비스를 시작한다. 권한 대화상자
+     * 동안 세션이 먼저 돌면 서비스 없이 수집되는 구간이 생기기 때문이다.
+     * 거부해도 기록은 그대로 시작한다. 알림이 없을 뿐 수집은 정상이다.
+     */
+    private fun startRecording() {
+        if (needsNotificationPermission()) {
+            notificationPermissionLauncher.launch(NotificationPermission.REQUIRED)
+        } else {
+            beginRecording()
+        }
+    }
+
+    private fun beginRecording() {
+        viewModel.start()
+        DrivingRecordService.start(this)
+        openNavigation()
+    }
+
+    private fun needsNotificationPermission(): Boolean =
+        NotificationPermission.shouldRequest(
+            sdkInt = Build.VERSION.SDK_INT,
+            granted = ContextCompat.checkSelfPermission(
+                this,
+                NotificationPermission.REQUIRED,
+            ) == PackageManager.PERMISSION_GRANTED,
+        )
 
     /**
      * 차량 내비게이션을 띄운다.
