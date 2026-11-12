@@ -115,6 +115,22 @@ AI의 분석 결과는 참고용 운전 코칭 정보이며, 차량의 안전 �
 
 ※ 위 기능은 프로젝트의 기획 방향이며, 실제 구현 및 지원 여부는 개발 진행 상황에 따라 갱신합니다.
 
+### 3.5 실행 화면
+
+Pleos Connect v2.1.0 에뮬레이터(2560×1440)에서 촬영한 화면입니다.
+
+| 홈 | 연습 미션 |
+| --- | --- |
+| <img src="docs/screenshots/01_home.jpg" alt="홈" width="420"> | <img src="docs/screenshots/02_practice_missions.jpg" alt="연습 미션" width="420"> |
+| **연습 준비** | **주행 중(시스템이 화면 차단)** |
+| <img src="docs/screenshots/03_practice_ready.jpg" alt="연습 준비" width="420"> | <img src="docs/screenshots/04_driving_blocked.jpg" alt="주행 중" width="420"> |
+| **정차 후 연습 종료 버튼** | **연습 결과와 코치 피드백** |
+| <img src="docs/screenshots/05_parked_running.jpg" alt="정차 후" width="420"> | <img src="docs/screenshots/06_practice_result.jpg" alt="연습 결과" width="420"> |
+| **리포트** | **야간 모드 홈** |
+| <img src="docs/screenshots/07_report.jpg" alt="리포트" width="420"> | <img src="docs/screenshots/08_home_night.jpg" alt="야간 모드 홈" width="420"> |
+| **야간 모드 리포트** | |
+| <img src="docs/screenshots/09_report_night.jpg" alt="야간 모드 리포트" width="420"> | |
+
 ## 4. 기술 스택
 
 TIREON은 Pleos Connect 기반 차량용 애플리케이션 개발 환경을 중심으로 구성합니다.
