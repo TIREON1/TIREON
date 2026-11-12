@@ -4,8 +4,10 @@ import ai.tireon.app.report.SessionRepositoryProvider
 import ai.tireon.app.ui.theme.TireonSurface
 import ai.tireon.app.ui.theme.TireonTheme
 import ai.tireon.core.mission.DrivingMission
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
 import ai.tireon.pleos.vehicle.VehicleSession
@@ -24,7 +26,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
  * 연습 액티비티와 달리 `distractionOptimized`를 선언하지 않는다. 주행 중에는
  * 화면이 필요 없고, 선언하지 않으면 플랫폼이 자동으로 가려준다.
  *
- * 액티비티가 가려져도 수집은 계속되어야 하므로 ViewModel에서 관리한다.
+ * 액티비티가 가려져도 수집은 계속되어야 하므로 ViewModel에서 관리하고, 기록 중에는
+ * [DrivingRecordService]로 프로세스를 포그라운드에 둔다.
  */
 class DrivingSessionActivity : ComponentActivity() {
 
@@ -41,6 +44,7 @@ class DrivingSessionActivity : ComponentActivity() {
                     mission = intent.mission(),
                 ).apply {
                     addCloseable { session.release() }
+                    addCloseable { DrivingRecordService.stop(applicationContext) }
                 }
             }
         }
@@ -67,8 +71,18 @@ class DrivingSessionActivity : ComponentActivity() {
                         state = state.value,
                         result = result.value,
                         saveStatus = saveStatus.value,
-                        onStart = viewModel::start,
-                        onStop = viewModel::requestStop,
+                        onStart = {
+                            viewModel.start()
+                            DrivingRecordService.start(this@DrivingSessionActivity)
+                            openNavigation()
+                        },
+                        onStop = {
+                            viewModel.requestStop()
+                            // 제한이 걸린 상태면 종료되지 않고 수집이 이어진다.
+                            if (!viewModel.state.value.collecting) {
+                                DrivingRecordService.stop(this@DrivingSessionActivity)
+                            }
+                        },
                         onClose = { finish() },
                     )
                 }
@@ -76,8 +90,26 @@ class DrivingSessionActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 차량 내비게이션을 띄운다.
+     *
+     * 수집은 [DrivingRecordService] 덕분에 화면이 가려져도 계속되므로, 운전자는 내비를
+     * 보며 주행하고 정차 후 독에서 돌아와 종료한다. 지도 앱이 없는 차량에서는 이 화면에
+     * 머문다.
+     */
+    private fun openNavigation() {
+        val intent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MAPS)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.w(TAG, "지도 앱이 없어 주행 기록 화면에 머뭅니다", e)
+        }
+    }
+
     companion object {
 
+        private const val TAG = "DrivingSessionActivity"
         private const val EXTRA_MISSION = "ai.tireon.app.extra.DRIVING_MISSION"
 
         /**

@@ -12,7 +12,7 @@
     <string name="onboarding_modes_title">연습과 주행</string>
     <string name="onboarding_modes_body">연습은 미션으로 익힙니다. 급가속 없이 출발하기처럼 한 가지만 골라 반복합니다.\n\n주행은 실도로를 기록합니다. 통제할 수 없는 변수가 많아 합격·불합격을 가르지 않고, 무엇이 몇 번 있었는지만 보여줍니다.</string>
     <string name="onboarding_driving_title">주행 중에는</string>
-    <string name="onboarding_driving_body">주행 기록 중에는 화면이 꺼집니다. 운전에 집중하도록 하기 위함입니다.\n\n결과는 주행이 끝난 뒤에 확인할 수 있습니다.</string>
+    <string name="onboarding_driving_body">주행 기록을 시작하면 내비게이션으로 넘어가고, TIREON은 화면 없이 기록만 합니다. 운전에 집중하도록 하기 위함입니다.\n\n결과는 정차한 뒤 TIREON으로 돌아와 확인할 수 있습니다.</string>
     <string name="onboarding_safety_title">안전 고지</string>
     <string name="onboarding_safety_body">TIREON은 운전 습관을 돌아보도록 돕는 참고 도구입니다.\n\n차량의 안전 장치를 대신하지 않습니다. 안전 운전의 책임은 운전자에게 있습니다.</string>
     <string name="onboarding_skip">건너뛰기</string>
@@ -61,12 +61,14 @@
     <string name="practice_select_mission">연습할 미션을 골라주세요</string>
 
     <string name="driving_session_title">주행 기록</string>
-    <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 주행 중에는 화면이 꺼집니다.</string>
+    <string name="driving_session_description">도로 주행을 기록하고 리포트를 만듭니다. 시작하면 내비게이션으로 넘어가고, 기록은 계속됩니다.</string>
     <string name="driving_session_start">주행 기록 시작</string>
     <string name="driving_session_recording">기록 중</string>
     <string name="driving_session_recording_title">주행을 기록하고 있어요</string>
     <string name="driving_session_recording_body">주행을 마쳤다면 종료하고 결과를 확인하세요. 차가 움직이면 화면이 가려집니다.</string>
     <string name="driving_session_stop">주행 종료</string>
+    <string name="driving_record_channel">주행 기록</string>
+    <string name="driving_record_notification_body">정차한 뒤 TIREON에서 주행을 종료하세요.</string>
 
     <string name="driving_mission_select_title">주행 미션을 골라주세요</string>
     <string name="driving_mission_select_description">고른 미션에 맞춰 주행을 분석합니다. 미션 없이 주행해도 기록은 남습니다.</string>

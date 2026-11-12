@@ -158,6 +158,11 @@ uxRestrictionsManager.registerListener { restrictions ->
 
 세션이 없으면 수집도 하지 않습니다. 불필요한 리스너를 남기지 않습니다.
 
+주행 기록 중에는 포그라운드 서비스(`DrivingRecordService`)를 띄웁니다. Android 14는
+화면이 없는 앱 프로세스를 약 10초 뒤 얼립니다. 서비스 없이 내비게이션으로 넘어가면
+그때부터 수집이 멈추는 것을 Pleos 에뮬레이터에서 확인했습니다. 기록 시작 시 지도 앱
+(`CATEGORY_APP_MAPS`)을 열고, 운전자는 정차 후 독에서 돌아와 기록을 종료합니다.
+
 ---
 
 ## 4. 화면 구조
