@@ -14,6 +14,7 @@ import android.util.Log
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.DefaultPleosSignalSource
 import ai.tireon.pleos.vehicle.VehicleSession
+import ai.tireon.pleos.coach.PleosCoachSpeaker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,18 +43,24 @@ class DrivingSessionActivity : ComponentActivity() {
         viewModelFactory {
             initializer {
                 val session = VehicleSession(applicationContext)
+                val speaker = PleosCoachSpeaker(applicationContext)
                 DrivingSessionViewModel(
                     signalSource = DefaultPleosSignalSource(applicationContext, session),
                     restrictionMonitor = RestrictionMonitor(applicationContext),
                     repository = SessionRepositoryProvider.get(applicationContext),
+                    speaker = speaker,
                     mission = intent.mission(),
                 ).apply {
+                    addCloseable { speaker.release() }
                     addCloseable { session.release() }
                     addCloseable { DrivingRecordService.stop(applicationContext) }
                 }
             }
         }
     }
+
+    /** 권한 없이 종료한 액티비티에서 ViewModel을 생성하지 않는다. */
+    private var contentShown = false
 
     /** 기록 중 알림 권한 요청. 거부해도 기록 자체는 계속한다. */
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -94,11 +101,25 @@ class DrivingSessionActivity : ComponentActivity() {
                                 DrivingRecordService.stop(this@DrivingSessionActivity)
                             }
                         },
-                        onClose = { finish() },
+                        onClose = {
+                            viewModel.onHidden()
+                            finish()
+                        },
                     )
                 }
             }
         }
+        contentShown = true
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (contentShown) viewModel.onShown()
+    }
+
+    override fun onStop() {
+        if (contentShown) viewModel.onHidden()
+        super.onStop()
     }
 
     /**

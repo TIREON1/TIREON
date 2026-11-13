@@ -76,7 +76,7 @@ class PracticeVoiceGuidanceTest {
     fun `이벤트 직후 종료해도 결과 안내를 생략하지 않는다`() {
         guidance.announceEvent("급제동이 있었어요.")
         now += 100
-        guidance.finish(summary(MissionResult.Failed("급제동이 있었어요 (1번)")))
+        finish(summary(MissionResult.Failed("급제동이 있었어요 (1번)")))
 
         assertEquals(2, speaker.spoken.size)
         assertTrue(speaker.spoken.last().startsWith("연습을 마쳤어요. 목표를 아직 달성하지 못했어요."))
@@ -88,7 +88,7 @@ class PracticeVoiceGuidanceTest {
     fun `빠르게 마친 성공 미션은 목표 달성을 읽고 점수는 만들어내지 않는다`() {
         guidance.start(PracticeMission.RIGHT_TURN_STOP)
         now += 100
-        guidance.finish(
+        finish(
             PracticeSummary.from(
                 ScoreResult.Insufficient(InsufficientReason.DURATION_TOO_SHORT),
                 emptyList(),
@@ -104,7 +104,7 @@ class PracticeVoiceGuidanceTest {
 
     @Test
     fun `판정 불가를 실패나 성공으로 바꾸지 않고 실제 사유를 안내한다`() {
-        guidance.finish(
+        finish(
             PracticeSummary.from(
                 ScoreResult.Insufficient(InsufficientReason.NOT_ENOUGH_SAMPLES),
                 emptyList(),
@@ -125,7 +125,7 @@ class PracticeVoiceGuidanceTest {
         val events = DrivingEventType.entries.map { type ->
             DrivingEvent(type, 0L, 3f, Confidence.MEASURED)
         }
-        guidance.finish(summary(MissionResult.Failed("급제동이 있었어요 (1번)"), events))
+        finish(summary(MissionResult.Failed("급제동이 있었어요 (1번)"), events))
 
         val text = speaker.spoken.single()
         assertTrue(text.contains("급제동이 있었어요 (1번)."))
@@ -138,7 +138,7 @@ class PracticeVoiceGuidanceTest {
 
     @Test
     fun `다른 이벤트가 있어도 선택한 미션의 실패 원인을 먼저 읽는다`() {
-        guidance.finish(
+        finish(
             summary(
                 MissionResult.Failed("우회전 전에 2초 이상 완전히 멈춰 보세요"),
                 listOf(DrivingEvent(DrivingEventType.HARSH_BRAKE, 0L, 3f, Confidence.MEASURED)),
@@ -156,6 +156,31 @@ class PracticeVoiceGuidanceTest {
         guidance.stop()
 
         assertTrue(speaker.stopped)
+    }
+
+    private fun finish(summary: PracticeSummary) {
+        guidance.prepareFinish(summary)(Result.success(Unit))
+    }
+
+    @Test
+    fun `연습 결과와 저장 실패를 한 번에 읽는다`() {
+        val onSaved = guidance.prepareFinish(summary(MissionResult.Success("부드럽게 정지했어요")))
+        assertTrue(speaker.spoken.isEmpty())
+        onSaved(Result.failure(IllegalStateException("disk full")))
+
+        val text = speaker.spoken.single()
+        assertTrue(text.startsWith("연습을 마쳤어요. 목표를 달성했어요."))
+        assertTrue(text.endsWith("기록을 저장하지 못했어요."))
+    }
+
+    @Test
+    fun `결과 저장 중 연습 화면을 닫으면 늦은 안내를 하지 않는다`() {
+        val onSaved = guidance.prepareFinish(summary(MissionResult.Success("부드럽게 정지했어요")))
+        guidance.stop()
+        onSaved(Result.failure(IllegalStateException("disk full")))
+
+        assertTrue(speaker.stopped)
+        assertTrue(speaker.spoken.isEmpty())
     }
 
     private fun summary(

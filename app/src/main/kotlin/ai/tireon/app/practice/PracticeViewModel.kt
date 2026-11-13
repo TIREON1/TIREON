@@ -108,6 +108,10 @@ class PracticeViewModel(
         voiceGuidance.stop()
     }
 
+    fun onShown() {
+        voiceGuidance.onShown()
+    }
+
     fun requestStop() {
         Log.i(TAG, "정지 요청: phase=${_state.value.phase}")
         if (_state.value.phase != PracticePhase.RUNNING) return
@@ -133,6 +137,7 @@ class PracticeViewModel(
     override fun onCleared() {
         sessionActive.value = false
         sessionJob?.cancel()
+        voiceGuidance.close()
         super.onCleared()
     }
 
@@ -146,10 +151,8 @@ class PracticeViewModel(
             sampleCount = samples.size,
         )
         val missionResult = MissionEvaluator().evaluate(mission, samples, events)
-        persist(result, events, distanceKm, missionResult)
-
         val summary = PracticeSummary.from(result, events, missionResult)
-        voiceGuidance.finish(summary)
+        persist(result, events, distanceKm, missionResult, voiceGuidance.prepareFinish(summary))
         return summary
     }
 
@@ -174,6 +177,7 @@ class PracticeViewModel(
         events: List<ai.tireon.core.driving.DrivingEvent>,
         distanceKm: Float,
         missionResult: MissionResult,
+        onSaved: (Result<Unit>) -> Unit,
     ) {
         val record = SessionRecordFactory.create(
             id = "session-$sessionStartedAtMs",
@@ -189,6 +193,7 @@ class PracticeViewModel(
             val result = repository.save(record)
             result.onFailure { Log.e(TAG, "세션 기록 저장 실패", it) }
             _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
+            onSaved(result)
         }
     }
 

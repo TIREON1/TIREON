@@ -14,6 +14,7 @@ import ai.tireon.core.report.SessionRepository
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.PleosSignalSource
+import ai.tireon.pleos.coach.CoachSpeaker
 import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -37,13 +38,14 @@ data class DrivingSessionResult(
 /**
  * 주행 세션을 진행한다.
  *
- * 연습 세션과 달리 실시간 코칭을 하지 않는다. 실도로 주행 중 음성 안내는
- * 운전을 방해할 수 있으므로, 수집이 끝난 뒤 결과만 보여준다.
+ * 연습 세션과 달리 실시간 코칭을 하지 않는다. 기록 시작을 짧게 확인하고,
+ * 정차 후 수집을 끝냈을 때 결과를 화면과 음성으로 안내한다.
  */
 class DrivingSessionViewModel(
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
     private val repository: SessionRepository,
+    speaker: CoachSpeaker,
     private val mission: DrivingMission? = null,
 ) : ViewModel() {
 
@@ -63,6 +65,7 @@ class DrivingSessionViewModel(
     private var latestRestriction: DrivingRestriction? = null
     private var startedAtMs = 0L
     private var startedRealtimeMs = 0L
+    private val voiceGuidance = DrivingVoiceGuidance(speaker)
 
     /** 종료 시점에 시계로 잰 주행 시간. 샘플 수로 세면 수집 주기에 따라 틀어진다. */
     private var durationSec = 0
@@ -76,6 +79,7 @@ class DrivingSessionViewModel(
         _result.value = null
         _state.value = _state.value.start(latestRestriction)
         sessionActive.value = true
+        voiceGuidance.start()
 
         sessionJob?.cancel()
         sessionJob = viewModelScope.launch {
@@ -114,8 +118,13 @@ class DrivingSessionViewModel(
     override fun onCleared() {
         sessionActive.value = false
         sessionJob?.cancel()
+        voiceGuidance.close()
         super.onCleared()
     }
+
+    fun onShown() = voiceGuidance.onShown()
+
+    fun onHidden() = voiceGuidance.onHidden(collecting = _state.value.collecting)
 
     private fun buildResult(): DrivingSessionResult {
         val events = EventDetector().detect(samples)
@@ -138,15 +147,15 @@ class DrivingSessionViewModel(
             )
         }
 
-        persist(scoreResult, events, distanceKm)
-
-        return DrivingSessionResult(
+        val result = DrivingSessionResult(
             scoreText = (scoreResult as? ScoreResult.Scored)?.score?.value?.toString(),
             message = messageOf(scoreResult),
             mission = mission,
             missionDetail = (missionResult as? DrivingMissionResult.Scored)?.detail,
             eventCount = events.size,
         )
+        persist(scoreResult, events, distanceKm, voiceGuidance.prepareFinish(result))
+        return result
     }
 
     private fun messageOf(result: ScoreResult): String = when (result) {
@@ -167,6 +176,7 @@ class DrivingSessionViewModel(
         result: ScoreResult,
         events: List<DrivingEvent>,
         distanceKm: Float,
+        onSaved: (Result<Unit>) -> Unit,
     ) {
         val record = SessionRecordFactory.create(
             id = "driving-$startedAtMs",
@@ -181,6 +191,7 @@ class DrivingSessionViewModel(
             val result = repository.save(record)
             result.onFailure { Log.e(TAG, "주행 기록 저장 실패", it) }
             _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
+            onSaved(result)
         }
     }
 

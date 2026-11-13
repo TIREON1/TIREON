@@ -78,12 +78,20 @@ class PracticeActivity : ComponentActivity() {
                         speedText = speed.value?.let { it.toInt().toString() },
                         onStart = viewModel::start,
                         onStop = viewModel::requestStop,
-                        onClose = { finish() },
+                        onClose = {
+                            viewModel.stopSpeaking()
+                            finish()
+                        },
                     )
                 }
             }
         }
         contentShown = true
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (contentShown) viewModel.onShown()
     }
 
     override fun onStop() {
