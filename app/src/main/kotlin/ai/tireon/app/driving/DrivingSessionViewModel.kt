@@ -11,6 +11,7 @@ import ai.tireon.core.mission.DrivingMissionEvaluator
 import ai.tireon.core.mission.DrivingMissionResult
 import ai.tireon.core.report.SessionRecordFactory
 import ai.tireon.core.report.SessionRepository
+import ai.tireon.app.report.SessionSaver
 import ai.tireon.pleos.restriction.DrivingRestriction
 import ai.tireon.pleos.restriction.RestrictionMonitor
 import ai.tireon.pleos.signal.PleosSignalSource
@@ -191,8 +192,7 @@ class DrivingSessionViewModel(
             events = events,
             drivingMission = mission,
         )
-        viewModelScope.launch {
-            val result = repository.save(record)
+        SessionSaver.shared.save(repository, record) { result ->
             result.onFailure { Log.e(TAG, "주행 기록 저장 실패", it) }
             _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
             onSaved(result)

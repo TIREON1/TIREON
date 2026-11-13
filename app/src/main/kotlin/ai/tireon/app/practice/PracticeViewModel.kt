@@ -14,6 +14,7 @@ import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.mission.PracticeMission
 import ai.tireon.core.report.SessionRecordFactory
 import ai.tireon.core.report.SessionRepository
+import ai.tireon.app.report.SessionSaver
 import ai.tireon.pleos.coach.CoachSpeaker
 import ai.tireon.core.driving.DrivingSample
 import ai.tireon.pleos.restriction.DrivingRestriction
@@ -189,8 +190,7 @@ class PracticeViewModel(
             mission = mission,
             missionResult = missionResult,
         )
-        viewModelScope.launch {
-            val result = repository.save(record)
+        SessionSaver.shared.save(repository, record) { result ->
             result.onFailure { Log.e(TAG, "세션 기록 저장 실패", it) }
             _saveStatus.value = ai.tireon.app.report.SaveStatus.from(result)
             onSaved(result)
