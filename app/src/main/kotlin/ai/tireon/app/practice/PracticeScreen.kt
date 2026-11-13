@@ -248,17 +248,43 @@ private fun ResultCard(mission: MissionDisplay, summary: PracticeSummary?) {
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            ScoreRing(scoreText = summary?.scoreText)
-            Text(
-                text = summary?.message.orEmpty(),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-            )
+            // 연습 미션은 대개 점수 기준(거리·시간)보다 짧게 끝난다. 점수가 없는데 미션은
+            // 판정했다면 빈 점수 고리 대신 판정 결과를 앞세운다.
+            val missionSuccess = summary?.missionSuccess
+            val missionOnly = summary?.scoreText == null && missionSuccess != null
+            if (missionSuccess != null && missionOnly) {
+                MissionResultMark(success = missionSuccess)
+            } else {
+                ScoreRing(scoreText = summary?.scoreText)
+            }
+            if (!missionOnly) {
+                Text(
+                    text = summary?.message.orEmpty(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                )
+            }
             summary?.let {
                 MissionResultChip(success = it.missionSuccess)
                 it.missionDetail?.let { detail ->
                     Text(
                         text = detail,
+                        style = if (missionOnly) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.bodyMedium
+                        },
+                        color = if (missionOnly) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                if (missionOnly) {
+                    Text(
+                        text = it.message,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -271,6 +297,25 @@ private fun ResultCard(mission: MissionDisplay, summary: PracticeSummary?) {
                 )
             }
         }
+    }
+}
+
+/** 점수 고리 자리에 그리는 미션 판정 표시. */
+@Composable
+private fun MissionResultMark(success: Boolean) {
+    val color = if (success) LocalStatusColors.current.good else MaterialTheme.colorScheme.tertiary
+    Box(
+        modifier = Modifier
+            .size(160.dp)
+            .background(color.copy(alpha = 0.12f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(if (success) R.drawable.ic_check_circle else R.drawable.ic_replay),
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(88.dp),
+        )
     }
 }
 
