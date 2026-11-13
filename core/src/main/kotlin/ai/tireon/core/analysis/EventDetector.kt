@@ -20,7 +20,16 @@ import kotlin.math.abs
  */
 class EventDetector {
 
-    fun detect(samples: List<DrivingSample>): List<DrivingEvent> {
+    /**
+     * @param includeOpenTurn 아직 끝나지 않은 회전 동작도 방향지시등 누락 판정에 넣을지.
+     *   세션 종료 후 최종 판정은 true, 실시간 안내는 false를 쓴다. 회전 중에 켠
+     *   방향지시등은 누락이 아니므로, 끝나지 않은 회전을 실시간으로 안내하면
+     *   최종 결과와 다른 말을 하게 된다.
+     */
+    fun detect(
+        samples: List<DrivingSample>,
+        includeOpenTurn: Boolean = true,
+    ): List<DrivingEvent> {
         if (samples.size < 2) return emptyList()
 
         val ordered = dropOutOfOrder(samples)
@@ -29,7 +38,7 @@ class EventDetector {
         val events = buildList {
             addAll(detectAcceleration(ordered))
             addAll(detectHarshSteering(ordered))
-            addAll(detectMissingTurnSignal(ordered))
+            addAll(detectMissingTurnSignal(ordered, includeOpenTurn))
         }
         return events.sortedBy { it.atMs }
     }
@@ -147,8 +156,10 @@ class EventDetector {
             val current = index - back
             if (current < 1) break
 
-            val v1 = samples[current - 1].speedMps ?: continue
-            val v2 = samples[current].speedMps ?: continue
+            // 후진 중 차속은 음수로 온다(AAOS PERF_VEHICLE_SPEED). 부호를 그대로 쓰면
+            // 후진 중 제동이 급가속으로 뒤집히므로 크기만 본다.
+            val v1 = samples[current - 1].speedMps?.let(::abs) ?: continue
+            val v2 = samples[current].speedMps?.let(::abs) ?: continue
             val stepMs = samples[current].timestampMs - samples[current - 1].timestampMs
             if (stepMs < Thresholds.MIN_SAMPLE_GAP_MS || stepMs > Thresholds.MAX_SAMPLE_GAP_MS) continue
 
@@ -256,8 +267,11 @@ class EventDetector {
      *   회전 전체의 최대 변화량을 근거로 남긴다.
      * - 주차·후진 중 조향은 도로 주행이 아니므로 판정하지 않는다.
      */
-    private fun detectMissingTurnSignal(samples: List<DrivingSample>): List<DrivingEvent> =
-        scanTurnManeuvers(samples)
+    private fun detectMissingTurnSignal(
+        samples: List<DrivingSample>,
+        includeOpenTurn: Boolean,
+    ): List<DrivingEvent> =
+        scanTurnManeuvers(samples, includeOpenTurn)
             .filter { !it.signaled && !it.signalUnknown }
             .map {
                 DrivingEvent(
@@ -268,7 +282,10 @@ class EventDetector {
                 )
             }
 
-    private fun scanTurnManeuvers(samples: List<DrivingSample>): List<TurnManeuver> {
+    private fun scanTurnManeuvers(
+        samples: List<DrivingSample>,
+        includeOpenTurn: Boolean = true,
+    ): List<TurnManeuver> {
         val maneuvers = mutableListOf<TurnManeuver>()
 
         var anchor: Float? = null
@@ -372,7 +389,7 @@ class EventDetector {
                 anchor = steer
             }
         }
-        closeManeuver()
+        if (includeOpenTurn) closeManeuver()
 
         return maneuvers
     }

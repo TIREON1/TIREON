@@ -1,6 +1,7 @@
 package ai.tireon.core.analysis
 
 import ai.tireon.core.driving.DrivingSample
+import kotlin.math.abs
 
 /**
  * 속도 적분으로 주행 거리를 추정한다.
@@ -23,7 +24,8 @@ object DistanceEstimator {
         for (index in 1 until samples.size) {
             val previous = samples[index - 1]
             val current = samples[index]
-            val speed = current.speedMps ?: continue
+            // 후진 중 차속은 음수로 온다. 이동 거리는 방향과 무관하게 더한다.
+            val speed = current.speedMps?.let { abs(it) } ?: continue
             val dtMs = current.timestampMs - previous.timestampMs
             if (dtMs <= 0) continue
 

@@ -20,7 +20,7 @@ class LiveCoach {
 
     /** 누적 샘플에서 아직 안내하지 않은 이벤트만 골라 돌려준다. */
     fun observe(samples: List<DrivingSample>): List<DrivingEvent> =
-        newEvents(detector.detect(samples))
+        newEvents(detector.detect(samples, includeOpenTurn = false))
 
     /** 아직 안내하지 않은 이벤트만 골라 돌려준다. */
     fun newEvents(events: List<DrivingEvent>): List<DrivingEvent> {
