@@ -208,9 +208,9 @@ TIREON은 총 3명의 팀원이 함께 개발하는 프로젝트입니다.
 | --- | --- |
 | APK 위치 | [`apk/TIREON_TIREON_release.apk`](apk/TIREON_TIREON_release.apk) |
 | 빌드 | release, 팀 서명 키로 서명 (APK Signature Scheme v2) |
-| 빌드 소스 | [`57dea10`](https://github.com/TIREON1/TIREON/commit/57dea10c1214d38861299601d80c9c391c1a3241), 연습 시작·미션 결과 음성 안내 포함 |
-| 빌드 실행 | [Release #43388357212](https://github.com/TIREON1/TIREON/actions/runs/43388357212) |
-| APK SHA-256 | `f08e82aa7955aaec0dd03d436d93f40bf31b47949f8fce68f821423fe3fc74f4` |
+| 빌드 소스 | [`cd7ff86`](https://github.com/TIREON1/TIREON/commit/cd7ff8681402810112c1e107b8801ac20d101672), 주행 기록 시작·종료 및 저장 실패 음성 안내 포함 |
+| 빌드 실행 | [Release #43390314931](https://github.com/TIREON1/TIREON/actions/runs/43390314931) |
+| APK SHA-256 | `1e8dcd54aff85cb534bea5562257d1b61a2798f728b76db113a4e3e8fe702991` |
 | 버전 | 0.1.0 (versionCode 1), 패키지 `ai.tireon.app` |
 | 개발·테스트 에뮬레이터 | Pleos Connect Emulator v2.1.0 (Android 14, arm64) |
 | 화면 규격 | 2560×1440, 160dpi |
