@@ -295,6 +295,7 @@ class EventDetector {
         var signaled = false
         var signalUnknown = false
         var lastSignalMs: Long? = null
+        var lastSignal: TurnSignal? = null
         var lastUnknownMs: Long? = null
         var direction = 0
 
@@ -339,7 +340,10 @@ class EventDetector {
             when (sample.turnSignal) {
                 TurnSignal.LEFT, TurnSignal.RIGHT -> {
                     lastSignalMs = sample.timestampMs
-                    if (maneuverActive) signaled = true
+                    lastSignal = sample.turnSignal
+                    if (maneuverActive && signalMatches(sample.turnSignal, direction)) {
+                        signaled = true
+                    }
                 }
                 TurnSignal.OFF -> Unit
                 null -> {
@@ -366,7 +370,8 @@ class EventDetector {
                 if (magnitude >= Thresholds.MISSING_SIGNAL_STEER_DEG) {
                     maneuverActive = true
                     maneuverStartMs = sample.timestampMs
-                    signaled = isRecent(lastSignalMs, sample.timestampMs)
+                    signaled = isRecent(lastSignalMs, sample.timestampMs) &&
+                        signalMatches(lastSignal, currentDirection)
                     signalUnknown = isRecent(lastUnknownMs, sample.timestampMs)
                     maneuverPeak = magnitude
                     direction = currentDirection
@@ -407,6 +412,19 @@ class EventDetector {
         if (sample.gear == Gear.PARK || sample.gear == Gear.REVERSE) return false
         val speed = sample.speedMps ?: return false
         return speed > 0f
+    }
+
+    /**
+     * 회전 방향과 방향지시등 방향이 맞는지 본다.
+     *
+     * 조향각은 수집 계층에서 좌회전이 양수가 되도록 정규화한다. 반대 방향
+     * 방향지시등을 켠 채 회전하면 그 회전의 신호로 보지 않는다.
+     */
+    private fun signalMatches(signal: TurnSignal?, direction: Int): Boolean = when {
+        signal == null || signal == TurnSignal.OFF -> false
+        direction > 0 -> signal == TurnSignal.LEFT
+        direction < 0 -> signal == TurnSignal.RIGHT
+        else -> true
     }
 
     // endregion

@@ -19,11 +19,12 @@ class MissionEvaluatorTest {
         steering: Float? = 0f,
         signal: TurnSignal? = TurnSignal.OFF,
         gear: Gear? = Gear.DRIVE,
+        brake: Boolean? = false,
     ) = DrivingSample(
         timestampMs = atMs,
         speedMps = speed,
         steeringDeg = steering,
-        brakePressed = false,
+        brakePressed = brake,
         turnSignal = signal,
         gear = gear,
     )
@@ -94,6 +95,22 @@ class MissionEvaluatorTest {
         )
 
         assertIs<MissionResult.Success>(result)
+    }
+
+    @Test
+    fun `부드러운 정지는 브레이크 신호가 없으면 판정하지 않는다`() {
+        val samples = (0 until 20).map { sample(it * 100L, speed = 4f, brake = null) } +
+            (20 until 60).map {
+                sample(it * 100L, speed = 4f - (it - 19) * 0.1f, brake = null)
+            }
+
+        val result = evaluator.evaluate(
+            mission = PracticeMission.SMOOTH_STOP,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<MissionResult.Insufficient>(result)
     }
 
     @Test
@@ -397,6 +414,26 @@ class MissionEvaluatorTest {
         )
 
         assertIs<MissionResult.Failed>(result)
+    }
+
+    @Test
+    fun `우회전 일시정지는 정지 중 핸들을 미리 돌려둬도 성공이다`() {
+        val samples = (0 until 20).map { sample(it * 100L, speed = 4f, signal = TurnSignal.RIGHT) } +
+            (20 until 30).map { sample(it * 100L, speed = 0f, signal = TurnSignal.RIGHT) } +
+            (30 until 45).map {
+                sample(it * 100L, speed = 0f, steering = 60f, signal = TurnSignal.RIGHT)
+            } +
+            (45 until 65).map {
+                sample(it * 100L, speed = 2f, steering = 60f, signal = TurnSignal.RIGHT)
+            }
+
+        val result = evaluator.evaluate(
+            mission = PracticeMission.RIGHT_TURN_STOP,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<MissionResult.Success>(result)
     }
 
     @Test

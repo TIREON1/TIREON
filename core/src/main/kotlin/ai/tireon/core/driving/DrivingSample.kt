@@ -9,6 +9,11 @@ package ai.tireon.core.driving
 data class DrivingSample(
     val timestampMs: Long,
     val speedMps: Float?,
+    /**
+     * 조향각. 양수는 좌회전, 음수는 우회전이다.
+     *
+     * 수집 계층이 SDK 부호를 이 규약에 맞춰 정규화한다.
+     */
     val steeringDeg: Float?,
     val brakePressed: Boolean?,
     val turnSignal: TurnSignal?,

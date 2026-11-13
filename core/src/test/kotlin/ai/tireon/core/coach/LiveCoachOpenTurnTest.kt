@@ -38,7 +38,7 @@ class LiveCoachOpenTurnTest {
 
         assertTrue(coach.observe(samples).isEmpty())
 
-        repeat(20) { drive(40f, TurnSignal.RIGHT) }
+        repeat(20) { drive(40f, TurnSignal.LEFT) }
         steerBack()
 
         assertTrue(coach.observe(samples).isEmpty())
