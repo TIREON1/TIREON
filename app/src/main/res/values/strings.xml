@@ -42,15 +42,17 @@
     <string name="report_save_failed">기록을 저장하지 못했어요</string>
 
     <string name="mission_smooth_start_name">부드러운 출발</string>
-    <string name="mission_smooth_start_description">급가속 없이 부드럽게 출발하는 연습입니다.</string>
+    <string name="mission_smooth_start_description">정지 상태에서 급가속 없이 시속 10km 이상으로 출발합니다.</string>
     <string name="mission_smooth_stop_name">부드러운 정지</string>
-    <string name="mission_smooth_stop_description">급제동 없이 미리 브레이크를 밟아 정지합니다.</string>
-    <string name="mission_reverse_sense_name">후진 감각</string>
-    <string name="mission_reverse_sense_description">후진 기어로 3초 이상 유지하며 핸들 조작을 익힙니다.</string>
+    <string name="mission_smooth_stop_description">시속 10km 이상으로 달리다가 급제동 없이 완전히 멈춥니다.</string>
+    <string name="mission_reverse_sense_name">천천히 후진</string>
+    <string name="mission_reverse_sense_description">후진 기어로 시속 10km 이하를 지키며 3초 이상 움직입니다.</string>
     <string name="mission_turn_signal_name">깜빡이 습관</string>
-    <string name="mission_turn_signal_description">핸들을 돌리기 전에 방향지시등을 켭니다.</string>
+    <string name="mission_turn_signal_description">방향지시등을 먼저 켜고 핸들을 돌려 회전합니다.</string>
     <string name="mission_steady_speed_name">정속 유지</string>
-    <string name="mission_steady_speed_description">속도를 일정하게 유지하는 감각을 익힙니다.</string>
+    <string name="mission_steady_speed_description">시속 15~25km를 5초 이상 유지합니다.</string>
+    <string name="mission_right_turn_stop_name">우회전 일시정지</string>
+    <string name="mission_right_turn_stop_description">오른쪽 깜빡이를 켜고 2초 이상 멈춘 뒤 우회전합니다.</string>
     <string name="permission_rationale_title">권한이 필요해요</string>
     <string name="permission_continue">계속</string>
     <string name="permission_later">나중에</string>

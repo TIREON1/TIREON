@@ -51,5 +51,11 @@ object MissionSelection {
             nameResId = R.string.mission_steady_speed_name,
             descriptionResId = R.string.mission_steady_speed_description,
         )
+
+        PracticeMission.RIGHT_TURN_STOP -> MissionDisplay(
+            mission = mission,
+            nameResId = R.string.mission_right_turn_stop_name,
+            descriptionResId = R.string.mission_right_turn_stop_description,
+        )
     }
 }

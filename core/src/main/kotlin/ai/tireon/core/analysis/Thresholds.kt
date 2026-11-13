@@ -18,6 +18,13 @@ object Thresholds {
     /** 조향 변화가 이 값 이상일 때 방향지시등 점등 여부를 본다. */
     const val MISSING_SIGNAL_STEER_DEG = 30f
 
+    /**
+     * 회전을 시작하기 전 이 시간 안에 켠 방향지시등만 그 회전의 신호로 본다.
+     *
+     * 한참 전에 차로를 바꾸며 켰던 신호가 다음 회전의 누락을 가리면 안 된다.
+     */
+    const val SIGNAL_LEAD_WINDOW_MS = 10_000L
+
     /** 이벤트로 인정하는 최소 지속 시간. */
     const val EVENT_MIN_DURATION_MS = 500L
 

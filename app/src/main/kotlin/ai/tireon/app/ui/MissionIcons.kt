@@ -15,6 +15,7 @@ internal object MissionIcons {
         PracticeMission.REVERSE_SENSE -> R.drawable.ic_reverse
         PracticeMission.TURN_SIGNAL -> R.drawable.ic_turn_signal
         PracticeMission.STEADY_SPEED -> R.drawable.ic_speed
+        PracticeMission.RIGHT_TURN_STOP -> R.drawable.ic_turn_right
     }
 
     @DrawableRes

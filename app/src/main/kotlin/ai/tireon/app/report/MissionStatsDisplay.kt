@@ -61,9 +61,10 @@ data class MissionStatsDisplay(
         fun nameOf(mission: PracticeMission): String = when (mission) {
             PracticeMission.SMOOTH_START -> "부드러운 출발"
             PracticeMission.SMOOTH_STOP -> "부드러운 정지"
-            PracticeMission.REVERSE_SENSE -> "후진 감각"
+            PracticeMission.REVERSE_SENSE -> "천천히 후진"
             PracticeMission.TURN_SIGNAL -> "깜빡이 습관"
             PracticeMission.STEADY_SPEED -> "정속 유지"
+            PracticeMission.RIGHT_TURN_STOP -> "우회전 일시정지"
         }
     }
 }

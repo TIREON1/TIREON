@@ -34,7 +34,7 @@ object MissionRecommender {
     fun reasonFor(records: List<DrivingSessionRecord>): String? {
         val top = topEvent(records) ?: return null
         val label = labelOf[top.first] ?: return null
-        return "최근 ${label}이(가) ${top.second}번 있었어요"
+        return "최근 ${label}이 ${top.second}번 있었어요"
     }
 
     private fun topEvent(records: List<DrivingSessionRecord>): Pair<String, Int>? {
