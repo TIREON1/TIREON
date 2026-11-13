@@ -3,6 +3,7 @@ package ai.tireon.app.practice
 import ai.tireon.core.coach.SpeechPolicy
 import ai.tireon.core.mission.PracticeMission
 import ai.tireon.pleos.coach.CoachSpeaker
+import ai.tireon.app.voice.SessionResultVoice
 
 /** 시작·종료 확인은 실시간 코칭의 재생 간격과 별개로 한 번씩 안내한다. */
 class PracticeVoiceGuidance(
@@ -11,6 +12,7 @@ class PracticeVoiceGuidance(
 ) {
     private var lastEventAtMs = 0L
     private var lastEventText: String? = null
+    private val resultVoice = SessionResultVoice(speaker)
 
     fun start(mission: PracticeMission) {
         // 시작 안내가 첫 급가속·급제동 안내를 막지 않도록 이벤트 시각은 갱신하지 않는다.
@@ -25,12 +27,16 @@ class PracticeVoiceGuidance(
         speaker.speak(text)
     }
 
-    fun finish(summary: PracticeSummary) {
+    fun prepareFinish(summary: PracticeSummary): (Result<Unit>) -> Unit {
         // 정차 후 종료가 확정된 안내다. 직전 이벤트 때문에 결과가 생략되면 안 된다.
-        speaker.speak(finishMessage(summary))
+        return resultVoice.prepare(finishMessage(summary))
     }
 
-    fun stop() = speaker.stop()
+    fun onShown() = resultVoice.onShown()
+
+    fun stop() = resultVoice.onHidden()
+
+    fun close() = resultVoice.close()
 
     private fun startMessage(mission: PracticeMission): String = when (mission) {
         PracticeMission.SMOOTH_START ->
