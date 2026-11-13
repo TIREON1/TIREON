@@ -96,4 +96,32 @@ class FileSessionRepositoryTest {
         assertEquals(3, recent.size)
         assertEquals("s4", recent.first().id)
     }
+
+    @Test
+    fun `새 저장소로 다시 열어도 주행 판정과 기존 기록을 함께 보존한다`() = runTest {
+        val repository = FileSessionRepository(folder.root)
+        assertTrue(repository.save(record("old", 1000L).copy(schemaVersion = 2)).isSuccess)
+        val scored = record("driving-scored", 2000L).copy(
+            mission = "SMOOTH_DRIVING", missionDetail = "급가속 1회, 급제동 0회", missionEvaluated = true,
+        )
+        val insufficient = record("driving-insufficient", 3000L).copy(
+            mission = "SMOOTH_DRIVING", missionDetail = "브레이크 신호를 받지 못했어요", missionEvaluated = false,
+        )
+        assertTrue(repository.save(scored).isSuccess)
+        assertTrue(repository.save(insufficient).isSuccess)
+        val reopened = FileSessionRepository(folder.root).recent(10)
+        assertEquals(listOf(insufficient, scored, record("old", 1000L).copy(schemaVersion = 2)), reopened)
+        assertEquals("판정 보류", ReportDetail.from(reopened.first()).missionLabel)
+    }
+
+    @Test
+    fun `깨진 원본은 새 기록 저장 시 덮어쓰지 않고 실패를 알린다`() = runTest {
+        val file = folder.newFile("sessions.json")
+        val damaged = "{ broken but recoverable original"
+        file.writeText(damaged)
+        val repository = FileSessionRepository(folder.root)
+        assertTrue(repository.recent(10).isEmpty())
+        assertTrue(repository.save(record("new", 2000L)).isFailure)
+        assertEquals(damaged, file.readText())
+    }
 }

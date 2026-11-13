@@ -68,6 +68,7 @@ class SchemaCompatibilityTest {
     @Test
     fun `버전 2 기록은 미션 정보를 유지한다`() {
         val current = DrivingSessionRecord(
+            schemaVersion = 2,
             id = "current-1",
             startedAtMs = 3000,
             durationSec = 60,
@@ -85,5 +86,30 @@ class SchemaCompatibilityTest {
 
         assertEquals(current, decoded)
         assertEquals(2, decoded.schemaVersion)
+    }
+
+    @Test
+    fun `버전 2 주행 미션에 없던 판정 상태를 추측하지 않는다`() {
+        val legacy = """{"schemaVersion":2,"id":"driving-old","startedAtMs":1000,
+            "durationSec":120,"distanceKm":1.0,"score":100,"insufficientReason":null,
+            "eventCounts":{},"mission":"SMOOTH_DRIVING"}"""
+        val record = json.decodeFromString<DrivingSessionRecord>(legacy)
+        assertNull(record.missionEvaluated)
+        assertNull(record.missionDetail)
+    }
+
+    @Test
+    fun `버전 3은 정상 판정과 보류를 왕복 보존한다`() {
+        for (evaluated in listOf(true, false, null)) {
+            val record = DrivingSessionRecord(
+                id = "driving-new", startedAtMs = 1000L, durationSec = 120,
+                distanceKm = 1f, score = 90, insufficientReason = null, eventCounts = emptyMap(),
+                mission = "SMOOTH_DRIVING", missionEvaluated = evaluated,
+                missionDetail = "저장할 판정 결과",
+            )
+            val encoded = json.encodeToString(DrivingSessionRecord.serializer(), record)
+            assertEquals(record, json.decodeFromString<DrivingSessionRecord>(encoded))
+            assertEquals(3, record.schemaVersion)
+        }
     }
 }

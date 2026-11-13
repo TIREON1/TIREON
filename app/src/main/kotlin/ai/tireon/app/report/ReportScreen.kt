@@ -227,7 +227,13 @@ private fun RecordCard(record: DrivingSessionRecord, onClick: () -> Unit) {
                 }
 
                 record.missionDetail?.let { detail ->
-                    MissionResultChip(success = record.missionSuccess)
+                    if (record.missionSuccess != null) {
+                        MissionResultChip(success = record.missionSuccess)
+                    } else {
+                        ReportDetail.from(record).missionLabel?.let { label ->
+                            Text(text = label, style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
                     Text(
                         text = detail,
                         style = MaterialTheme.typography.bodySmall,

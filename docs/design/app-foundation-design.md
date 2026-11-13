@@ -28,7 +28,8 @@ TIREON의 앱 셸과 구조를 세웁니다. 화면을 먼저 그리지 않고
 
 포함하는 것:
 
-- 앱 셸 (액티비티 2개, 내비게이션, 테마)
+- 앱 셸 (`MainActivity`, `PracticeActivity`, `DrivingSessionActivity`, 내비게이션, 테마)
+- 주행 기록 유지: 포그라운드 서비스 `DrivingRecordService`
 - Pleos 신호 수집 계층 (`:pleos`)
 - 분석과 점수 도메인 (`:core`)
 - 연습 미션 6종, 주행 미션 4종 정의
@@ -79,7 +80,7 @@ TIREON의 앱 셸과 구조를 세웁니다. 화면을 먼저 그리지 않고
 | 신호 | 소스 | 단위 | 비고 |
 |---|---|---|---|
 | 속도 | AAOS `PERF_VEHICLE_SPEED` | m/s | 실측 5~10Hz, 최소 간격 100ms |
-| 기어 | Pleos `Gear` | enum | P, R, N, D |
+| 기어 | AAOS `GEAR_SELECTION` (`AaosGearReader`) | enum | P, R, N, D |
 | 누적 거리 | Pleos `Odometer` | km | 차분해서 사용 |
 | 브레이크 페달 | Pleos `Brake` | boolean | 급제동 이중 확인용 |
 | 조향각 | Pleos `SteeringWheel` | degree | 부호가 반전되어 들어옴 |
@@ -379,7 +380,7 @@ data class EventContribution(
 
 ```kotlin
 interface PleosSignalSource {
-    fun samples(sessionActive: Boolean): Flow<DrivingSample>
+    fun samples(sessionActive: Flow<Boolean>): Flow<DrivingSample>
 }
 
 interface CoachSpeaker {
@@ -392,14 +393,8 @@ SDK 타입은 반환하지 않습니다. `DrivingSample`은 `:core` 타입입니
 
 ### 6.4 기존 코드 정리
 
-`DrivingViewModel`이 현재 `:pleos`에 있습니다. ViewModel은 UI 관심사이므로
-`:app`으로 옮깁니다.
-
-이동 시점은 앱 셸 단계입니다. 분석 계층은 SDK와 UI에 의존하지 않아 먼저
-완성할 수 있습니다. 반대로 ViewModel을 옮기려면 `:app` 화면 구조가 먼저
-정해져야 합니다. 분석 계층 작업에서 이 항목을 건드리지 않는 이유입니다.
-
-그 외 기존 코드는 건드리지 않습니다.
+`DrivingViewModel`의 `:app` 이동은 완료했습니다. UI 상태는 `:app`, 차량 SDK 접근은
+`:pleos`, 분석과 미션 판정은 `:core`에 둡니다.
 
 ### 6.5 저장
 
@@ -407,17 +402,27 @@ SDK 타입은 반환하지 않습니다. `DrivingSample`은 `:core` 타입입니
 
 ```kotlin
 interface SessionRepository {
-    suspend fun save(session: DrivingSession)
-    suspend fun recent(limit: Int): List<DrivingSession>
-    suspend fun find(id: String): DrivingSession?
+    suspend fun save(record: DrivingSessionRecord): Result<Unit>
+    suspend fun recent(limit: Int): List<DrivingSessionRecord>
+    suspend fun latest(): DrivingSessionRecord?
 }
 ```
+
+저장 형식 v3는 `missionEvaluated`로 판정 완료/보류를 구분하며, 주행 미션의 요약과
+보류 사유를 `missionDetail`에 보존합니다. 주행 미션은 성공·실패를 가르지 않습니다.
+v1/v2 기록은 새 필드 기본값(null)으로 읽고, 과거에 저장되지 않은 결과를 추측하지 않습니다.
+저장 작업은 앱 수명 스코프에서 완료하고 파일을 원자적으로 교체합니다. 읽지 못한 원본은
+덮어쓰지 않고 저장 실패를 반환합니다.
 
 Room은 1차 범위에서 과합니다. 세션 수가 늘면 그때 검토합니다.
 
 ---
 
 ## 7. AI 코치 계층
+
+현재 제출 구현은 결정론적 룰 기반 코칭과 Pleos TTS입니다. `CoachRefiner`와
+LLM 다듬기는 구현하지 않았으며 향후 과제입니다. 아래 LLM 관련 설계와 가드레일은
+현재 동작이나 검증 완료 항목이 아닙니다.
 
 ### 7.1 2단 구조
 
@@ -505,7 +510,7 @@ tts.speak(message.text)
 | `ScoreCalculator` | NaN, 무한대, 음수 거리 |
 | `CoachMessages` | 이벤트별 문장과 evidence 생성 |
 | `CoachMessages` | 감점 0 항목 제외 |
-| `CoachRefiner` 가드 | 숫자 불변 위반 응답 폐기 |
+| `CoachRefiner` 가드 (향후 과제, 미구현) | 숫자 불변 위반 응답 폐기 |
 
 합성 데이터로 검증하므로 에뮬레이터 없이 빠르게 돌릴 수 있습니다.
 

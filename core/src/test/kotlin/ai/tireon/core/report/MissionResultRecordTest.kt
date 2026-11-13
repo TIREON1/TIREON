@@ -92,6 +92,6 @@ class MissionResultRecordTest {
             events = emptyList(),
         )
 
-        assertEquals(2, record.schemaVersion)
+        assertEquals(3, record.schemaVersion)
     }
 }

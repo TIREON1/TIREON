@@ -26,6 +26,7 @@ data class ReportDetail(
     val missionSuccess: Boolean? = null,
     /** 연습인지 주행인지와 고른 미션. */
     val kind: SessionKind? = null,
+    val missionEvaluated: Boolean? = null,
 ) {
     companion object {
 
@@ -53,11 +54,18 @@ data class ReportDetail(
             missionLabel = when (record.missionSuccess) {
                 true -> "목표 달성"
                 false -> "다시 해볼까요"
-                null -> null
+                null -> when {
+                    record.missionEvaluated == false -> "판정 보류"
+                    record.missionEvaluated == true -> "주행 미션 요약"
+                    record.missionDetail != null && SessionKind.of(record) is SessionKind.Practice -> "판정 보류"
+                    record.missionDetail != null -> "주행 미션 요약"
+                    else -> null
+                }
             },
             missionDetail = record.missionDetail,
             missionSuccess = record.missionSuccess,
             kind = SessionKind.of(record),
+            missionEvaluated = record.missionEvaluated,
         )
 
         private fun reasonOf(reason: String?): String = when (reason) {

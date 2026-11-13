@@ -101,6 +101,7 @@
     <string name="report_detail_duration">주행 시간</string>
     <string name="report_detail_distance">주행 거리</string>
     <string name="report_detail_events">발생 이벤트</string>
+    <string name="report_detail_event_scope">수신한 신호에서 감지된 이벤트만 표시해요. 신호가 없었던 항목은 0회나 안전한 주행을 뜻하지 않아요.</string>
     <string name="report_detail_no_events">기록된 이벤트가 없어요</string>
     <string name="report_detail_event_count">%1$d회</string>
     <string name="report_detail_mission">미션 결과</string>

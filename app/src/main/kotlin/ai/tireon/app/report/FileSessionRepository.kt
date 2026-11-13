@@ -44,7 +44,7 @@ class FileSessionRepository(
     override suspend fun save(record: DrivingSessionRecord): Result<Unit> = mutex.withLock {
         withContext(ioDispatcher) {
             runCatching {
-                val current = readAll()
+                val current = readAll(failOnError = true)
                 val updated = (current + record)
                     .distinctBy { it.id }
                     .sortedByDescending { it.startedAtMs }
@@ -62,12 +62,14 @@ class FileSessionRepository(
 
     override suspend fun latest(): DrivingSessionRecord? = recent(limit = 1).firstOrNull()
 
-    private fun readAll(): List<DrivingSessionRecord> {
+    private fun readAll(failOnError: Boolean = false): List<DrivingSessionRecord> {
         if (!file.isFile) return emptyList()
         return try {
             val text = file.readText()
             if (text.isBlank()) emptyList() else json.decodeFromString(serializer, text)
         } catch (e: Exception) {
+            // 읽지 못한 원본을 빈 목록으로 덮어쓰면 복구 가능한 기록까지 사라진다.
+            if (failOnError) throw e
             Log.e(TAG, "세션 기록을 읽지 못했습니다. 빈 목록으로 시작합니다", e)
             emptyList()
         }

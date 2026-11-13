@@ -146,15 +146,20 @@ private fun EventsSection(detail: ReportDetail) {
         title = stringResource(R.string.report_detail_events),
         titleIcon = R.drawable.ic_warning,
     ) {
+        Text(
+            text = stringResource(R.string.report_detail_event_scope),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         if (detail.events.isEmpty()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_check_circle),
+                    painter = painterResource(R.drawable.ic_info),
                     contentDescription = null,
-                    tint = LocalStatusColors.current.good,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
@@ -181,7 +186,11 @@ private fun MissionSection(label: String, detail: ReportDetail) {
     ) {
         StatusChip(
             text = label,
-            icon = if (detail.missionSuccess == false) R.drawable.ic_replay else R.drawable.ic_check_circle,
+            icon = when (detail.missionSuccess) {
+                true -> R.drawable.ic_check_circle
+                false -> R.drawable.ic_replay
+                null -> R.drawable.ic_info
+            },
             color = when (detail.missionSuccess) {
                 true -> LocalStatusColors.current.good
                 false -> MaterialTheme.colorScheme.tertiary

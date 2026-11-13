@@ -159,7 +159,7 @@ class DrivingSessionViewModel(
             },
             eventCount = events.size,
         )
-        persist(scoreResult, events, distanceKm, voiceGuidance.prepareFinish(result))
+        persist(scoreResult, events, distanceKm, missionResult, voiceGuidance.prepareFinish(result))
         return result
     }
 
@@ -181,6 +181,7 @@ class DrivingSessionViewModel(
         result: ScoreResult,
         events: List<DrivingEvent>,
         distanceKm: Float,
+        missionResult: DrivingMissionResult?,
         onSaved: (Result<Unit>) -> Unit,
     ) {
         val record = SessionRecordFactory.create(
@@ -191,6 +192,7 @@ class DrivingSessionViewModel(
             result = result,
             events = events,
             drivingMission = mission,
+            drivingMissionResult = missionResult,
         )
         SessionSaver.shared.save(repository, record) { result ->
             result.onFailure { Log.e(TAG, "주행 기록 저장 실패", it) }
