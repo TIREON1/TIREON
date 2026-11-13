@@ -20,11 +20,19 @@ data class StatsDisplay(
 ) {
     companion object {
 
-        fun from(stats: DrivingStats?, periodDays: Int): StatsDisplay {
+        fun from(
+            stats: DrivingStats?,
+            periodDays: Int,
+            hasUnscoredRecords: Boolean = false,
+        ): StatsDisplay {
             if (stats == null) {
                 return StatsDisplay(
                     hasStats = false,
-                    emptyMessage = "최근 ${periodDays}일 기록이 없어요",
+                    emptyMessage = if (hasUnscoredRecords) {
+                        "최근 ${periodDays}일 기록은 있지만 점수를 낼 수 있는 주행이 없어요"
+                    } else {
+                        "최근 ${periodDays}일 기록이 없어요"
+                    },
                     averageText = null,
                     changeText = null,
                     sessionText = null,

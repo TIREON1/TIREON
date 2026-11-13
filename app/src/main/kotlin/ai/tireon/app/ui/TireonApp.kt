@@ -1,5 +1,6 @@
 package ai.tireon.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -96,6 +97,7 @@ fun TireonApp(
         homeViewModel.refresh()
         reportViewModel.refresh()
         statsViewModel.refresh()
+        settingsViewModel.load()
         onPauseOrDispose { }
     }
     val launchPractice: (ai.tireon.core.mission.PracticeMission) -> Unit = { mission ->
@@ -269,6 +271,10 @@ private fun TireonNavGraph(
         }
         composable(TireonDestination.REPORT.route) {
             val selectedDetail = reportState.selectedDetail
+            // 상세는 별도 목적지가 아니므로 시스템 뒤로가기도 목록으로 돌려보낸다.
+            BackHandler(enabled = selectedDetail != null) {
+                onClearReportSelection()
+            }
             if (selectedDetail != null) {
                 ai.tireon.app.report.ReportDetailScreen(
                     detail = selectedDetail,

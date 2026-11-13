@@ -41,14 +41,14 @@ class StatsRefreshTest {
         override suspend fun latest(): DrivingSessionRecord? = records.firstOrNull()
     }
 
-    private fun record(id: String, score: Int = 85, startedAtMs: Long = NOW - HOUR) =
+    private fun record(id: String, score: Int? = 85, startedAtMs: Long = NOW - HOUR) =
         DrivingSessionRecord(
             id = id,
             startedAtMs = startedAtMs,
             durationSec = 60,
             distanceKm = 1f,
             score = score,
-            insufficientReason = null,
+            insufficientReason = if (score == null) "DURATION_TOO_SHORT" else null,
             eventCounts = emptyMap(),
         )
 
@@ -87,6 +87,18 @@ class StatsRefreshTest {
         advanceUntilIdle()
 
         assertEquals(afterInit + 2, repository.readCount)
+    }
+
+    @Test
+    fun `점수 없는 기록만 있으면 기록 없음과 구분한다`() = runTest {
+        val repository = FakeRepository(listOf(record("a", score = null)))
+        val viewModel = StatsViewModel(repository) { NOW }
+        advanceUntilIdle()
+
+        assertEquals(
+            "최근 7일 기록은 있지만 점수를 낼 수 있는 주행이 없어요",
+            viewModel.state.value.display.emptyMessage,
+        )
     }
 
     @Test

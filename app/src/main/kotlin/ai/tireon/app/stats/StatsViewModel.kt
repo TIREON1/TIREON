@@ -30,10 +30,19 @@ class StatsViewModel(
 
     fun refresh() {
         viewModelScope.launch {
+            val now = clock()
             val records = repository.recent(FETCH_LIMIT)
-            val stats = DrivingStats.from(records, nowMs = clock(), periodDays = DEFAULT_PERIOD_DAYS)
+            val stats = DrivingStats.from(records, nowMs = now, periodDays = DEFAULT_PERIOD_DAYS)
+            val periodStart = now - DEFAULT_PERIOD_DAYS * MILLIS_PER_DAY
+            val hasUnscoredRecords = stats == null &&
+                records.any { it.startedAtMs in periodStart..now }
+
             _state.value = StatsUiState(
-                display = StatsDisplay.from(stats, DEFAULT_PERIOD_DAYS),
+                display = StatsDisplay.from(
+                    stats = stats,
+                    periodDays = DEFAULT_PERIOD_DAYS,
+                    hasUnscoredRecords = hasUnscoredRecords,
+                ),
                 loading = false,
             )
         }
@@ -49,5 +58,6 @@ class StatsViewModel(
         /** 기간 비교에 필요한 만큼 넉넉히 읽는다. */
         const val FETCH_LIMIT = 100
         const val DEFAULT_PERIOD_DAYS = 7
+        const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
     }
 }
