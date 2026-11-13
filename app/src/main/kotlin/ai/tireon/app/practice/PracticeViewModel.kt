@@ -162,7 +162,9 @@ class PracticeViewModel(
      * 제한이 없을 때도 안내하되, [SpeechPolicy]가 간격과 중복을 거른다.
      */
     private fun announceNewEvents() {
-        val fresh = liveCoach.newEvents(liveCoach.observe(samples))
+        // observe()가 이미 안내한 이벤트를 걸러 기록한다. 결과를 newEvents()로 한 번 더
+        // 거르면 방금 기록한 이벤트까지 빠져 실시간 안내가 나가지 않는다.
+        val fresh = liveCoach.observe(samples)
         if (fresh.isEmpty()) return
 
         val text = fresh.joinToString(" ") { liveCoach.messageFor(it) }
