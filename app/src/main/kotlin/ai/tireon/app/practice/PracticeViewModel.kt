@@ -8,9 +8,7 @@ import ai.tireon.core.analysis.DistanceEstimator
 import ai.tireon.core.analysis.EventDetector
 import ai.tireon.core.analysis.ScoreCalculator
 import ai.tireon.core.analysis.ScoreResult
-import ai.tireon.core.coach.CoachMessages
 import ai.tireon.core.coach.LiveCoach
-import ai.tireon.core.coach.SpeechPolicy
 import ai.tireon.core.mission.MissionEvaluator
 import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.mission.PracticeMission
@@ -38,7 +36,7 @@ class PracticeViewModel(
     private val signalSource: PleosSignalSource,
     private val restrictionMonitor: RestrictionMonitor,
     private val repository: SessionRepository,
-    private val speaker: CoachSpeaker,
+    speaker: CoachSpeaker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PracticeSessionState.initial())
@@ -61,9 +59,8 @@ class PracticeViewModel(
     private var latestRestriction: DrivingRestriction? = null
     private var sessionStartedAtMs = 0L
     private var sessionStartedRealtimeMs = 0L
-    private var lastSpokenAtMs = 0L
-    private var lastSpokenText: String? = null
     private val liveCoach = LiveCoach()
+    private val voiceGuidance = PracticeVoiceGuidance(speaker, SystemClock::elapsedRealtime)
 
     fun start() {
         if (_state.value.phase != PracticePhase.READY) {
@@ -79,6 +76,7 @@ class PracticeViewModel(
         samples.clear()
         _state.value = _state.value.start(latestRestriction)
         sessionActive.value = true
+        voiceGuidance.start(mission)
 
         sessionJob?.cancel()
         sessionJob = viewModelScope.launch {
@@ -107,7 +105,7 @@ class PracticeViewModel(
 
     /** 화면이 가려지면 읽던 문장을 멈춘다. */
     fun stopSpeaking() {
-        speaker.stop()
+        voiceGuidance.stop()
     }
 
     fun requestStop() {
@@ -151,7 +149,7 @@ class PracticeViewModel(
         persist(result, events, distanceKm, missionResult)
 
         val summary = PracticeSummary.from(result, events, missionResult)
-        speakSummary(result, events)
+        voiceGuidance.finish(summary)
         return summary
     }
 
@@ -159,7 +157,7 @@ class PracticeViewModel(
      * 세션 중 새 이벤트를 음성으로 안내한다.
      *
      * 제한이 걸린 상태에서는 화면이 숫자 하나뿐이라 음성이 주 채널이 된다.
-     * 제한이 없을 때도 안내하되, [SpeechPolicy]가 간격과 중복을 거른다.
+     * 제한이 없을 때도 안내하되, [PracticeVoiceGuidance]가 간격과 중복을 거른다.
      */
     private fun announceNewEvents() {
         // observe()가 이미 안내한 이벤트를 걸러 기록한다. 결과를 newEvents()로 한 번 더
@@ -168,29 +166,7 @@ class PracticeViewModel(
         if (fresh.isEmpty()) return
 
         val text = fresh.joinToString(" ") { liveCoach.messageFor(it) }
-        val now = System.currentTimeMillis()
-        if (!SpeechPolicy.shouldSpeak(now, lastSpokenAtMs, text, lastSpokenText)) return
-
-        lastSpokenAtMs = now
-        lastSpokenText = text
-        speaker.speak(text)
-    }
-
-    /**
-     * 세션 요약을 음성으로 읽는다.
-     *
-     * 문장 생성은 코치 계층에 맡기고, 재생 여부만 정책으로 거른다.
-     */
-    private fun speakSummary(result: ScoreResult, events: List<ai.tireon.core.driving.DrivingEvent>) {
-        val messages = CoachMessages().build(events, result)
-        val text = messages.joinToString(" ") { it.text }
-
-        val now = System.currentTimeMillis()
-        if (!SpeechPolicy.shouldSpeak(now, lastSpokenAtMs, text, lastSpokenText)) return
-
-        lastSpokenAtMs = now
-        lastSpokenText = text
-        speaker.speak(text)
+        voiceGuidance.announceEvent(text)
     }
 
     private fun persist(
