@@ -20,7 +20,7 @@ data class PracticeSummary(
     val missionSuccess: Boolean? = null,
     /** 미션 판정 상세 문구. */
     val missionDetail: String? = null,
-    /** 측정 근거가 붙은 코칭 문장. 음성으로 읽는 문장과 같다. */
+    /** 측정 근거가 붙은 코칭 문장. 종료 음성은 이 중 필요한 피드백 하나만 읽는다. */
     val coachMessages: List<CoachMessage> = emptyList(),
 ) {
     companion object {
