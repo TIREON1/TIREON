@@ -1,6 +1,10 @@
 package ai.tireon.app.report
 
 import ai.tireon.core.report.DrivingSessionRecord
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -63,6 +67,23 @@ class FileSessionRepositoryTest {
         val repository = FileSessionRepository(folder.root)
 
         assertTrue(repository.recent(10).isEmpty())
+    }
+
+    @Test
+    fun `동시에 저장해도 기록이 유실되지 않는다`() = runTest {
+        val repository = FileSessionRepository(folder.root)
+
+        coroutineScope {
+            (0 until 20).map { index ->
+                async(Dispatchers.IO) {
+                    repository.save(record("c$index", index * 1_000L))
+                }
+            }.awaitAll()
+        }
+
+        val recent = repository.recent(limit = 30)
+
+        assertEquals(20, recent.size)
     }
 
     @Test

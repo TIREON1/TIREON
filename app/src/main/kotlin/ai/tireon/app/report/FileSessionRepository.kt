@@ -5,10 +5,15 @@ import ai.tireon.core.report.SessionRepository
 import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * 세션 기록을 단일 JSON 파일로 저장한다.
@@ -33,7 +38,10 @@ class FileSessionRepository(
     }
     private val serializer = ListSerializer(DrivingSessionRecord.serializer())
 
-    override suspend fun save(record: DrivingSessionRecord): Result<Unit> =
+    /** 읽기·쓰기가 같은 파일을 동시에 건드리지 않게 한다. */
+    private val mutex = Mutex()
+
+    override suspend fun save(record: DrivingSessionRecord): Result<Unit> = mutex.withLock {
         withContext(ioDispatcher) {
             runCatching {
                 val current = readAll()
@@ -44,11 +52,13 @@ class FileSessionRepository(
                 writeAll(updated)
             }.onFailure { Log.e(TAG, "세션 기록 저장 실패", it) }
         }
+    }
 
-    override suspend fun recent(limit: Int): List<DrivingSessionRecord> =
+    override suspend fun recent(limit: Int): List<DrivingSessionRecord> = mutex.withLock {
         withContext(ioDispatcher) {
             readAll().sortedByDescending { it.startedAtMs }.take(limit)
         }
+    }
 
     override suspend fun latest(): DrivingSessionRecord? = recent(limit = 1).firstOrNull()
 
@@ -67,11 +77,30 @@ class FileSessionRepository(
         directory.mkdirs()
         val temp = File(directory, "$FILE_NAME.tmp")
         temp.writeText(json.encodeToString(serializer, records))
-        if (!temp.renameTo(file)) {
-            file.delete()
-            if (!temp.renameTo(file)) {
-                throw IllegalStateException("세션 기록 파일을 교체하지 못했습니다")
-            }
+
+        // 원본을 지우기 전에 교체한다. 이동에 실패해도 기존 기록은 남는다.
+        try {
+            moveIntoPlace(temp)
+        } catch (e: Exception) {
+            temp.delete()
+            throw e
+        }
+    }
+
+    private fun moveIntoPlace(temp: File) {
+        try {
+            Files.move(
+                temp.toPath(),
+                file.toPath(),
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+        } catch (e: AtomicMoveNotSupportedException) {
+            Files.move(
+                temp.toPath(),
+                file.toPath(),
+                StandardCopyOption.REPLACE_EXISTING,
+            )
         }
     }
 

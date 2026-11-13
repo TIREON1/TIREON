@@ -38,6 +38,14 @@ class StatsDisplayTest {
     }
 
     @Test
+    fun `기록은 있지만 점수가 없으면 기록 없음과 구분한다`() {
+        val display = StatsDisplay.from(null, periodDays = 7, hasUnscoredRecords = true)
+
+        assertEquals("최근 7일 기록은 있지만 점수를 낼 수 있는 주행이 없어요", display.emptyMessage)
+        assertEquals(false, display.hasStats)
+    }
+
+    @Test
     fun `평균 점수를 표시한다`() {
         val display = StatsDisplay.from(stats(), periodDays = 7)
 

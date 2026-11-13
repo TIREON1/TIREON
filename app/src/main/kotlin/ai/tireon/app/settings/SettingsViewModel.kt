@@ -21,8 +21,13 @@ class SettingsViewModel(
         load()
     }
 
+    private var requestId = 0
+
+    /** 화면에 다시 들어올 때 차량 정보를 갱신한다. 늦게 온 이전 응답은 버린다. */
     fun load() {
+        val id = ++requestId
         infoSource.readInfo { connected, vin ->
+            if (id != requestId) return@readInfo
             _info.value = _info.value.copy(
                 vehicleAvailable = connected,
                 vin = vin,
