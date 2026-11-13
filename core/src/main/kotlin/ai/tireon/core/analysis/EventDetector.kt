@@ -35,6 +35,15 @@ class EventDetector {
     }
 
     /**
+     * 방향지시등을 켜고 한 회전 동작 수.
+     *
+     * 누락 이벤트가 없다는 것만으로는 회전을 했는지 알 수 없다. 연습 미션이
+     * 실제로 동작이 있었는지 확인할 때 쓴다.
+     */
+    fun countSignaledTurns(samples: List<DrivingSample>): Int =
+        scanTurnManeuvers(dropOutOfOrder(samples)).count { it.signaled }
+
+    /**
      * 시간이 뒤로 가거나 같은 샘플을 버린다.
      *
      * 수집 계층의 버그나 콜백 중복으로 순서가 깨질 수 있고, 그 상태로 나눗셈을 하면
@@ -240,14 +249,27 @@ class EventDetector {
      * 조향이 연속된 구간을 "회전 동작 한 번"으로 보고 방향지시등을 확인한다.
      *
      * - 동작은 기준점 대비 [Thresholds.MISSING_SIGNAL_STEER_DEG] 이상 벌어지면 시작된다.
-     * - 구간 전체에서 한 번이라도 방향지시등을 켰다면 누락으로 세지 않는다.
-     *   회전 중 자동으로 꺼지는 것은 정상 동작이라 처벌하면 안 된다.
+     * - 회전 직전([Thresholds.SIGNAL_LEAD_WINDOW_MS] 이내)이나 회전 중에 한 번이라도
+     *   방향지시등을 켰다면 누락으로 세지 않는다. 회전 중 자동으로 꺼지는 것은
+     *   정상 동작이라 처벌하면 안 된다.
      * - 동작이 끝나면(조향이 기준점 근처로 돌아오거나 방향을 바꿈) 1회로 확정하고
      *   회전 전체의 최대 변화량을 근거로 남긴다.
      * - 주차·후진 중 조향은 도로 주행이 아니므로 판정하지 않는다.
      */
-    private fun detectMissingTurnSignal(samples: List<DrivingSample>): List<DrivingEvent> {
-        val events = mutableListOf<DrivingEvent>()
+    private fun detectMissingTurnSignal(samples: List<DrivingSample>): List<DrivingEvent> =
+        scanTurnManeuvers(samples)
+            .filter { !it.signaled && !it.signalUnknown }
+            .map {
+                DrivingEvent(
+                    type = DrivingEventType.MISSING_TURN_SIGNAL,
+                    atMs = it.startMs,
+                    value = it.peakDeg,
+                    confidence = Confidence.MEASURED,
+                )
+            }
+
+    private fun scanTurnManeuvers(samples: List<DrivingSample>): List<TurnManeuver> {
+        val maneuvers = mutableListOf<TurnManeuver>()
 
         var anchor: Float? = null
         var maneuverStartMs = 0L
@@ -255,15 +277,20 @@ class EventDetector {
         var maneuverActive = false
         var signaled = false
         var signalUnknown = false
+        var lastSignalMs: Long? = null
+        var lastUnknownMs: Long? = null
         var direction = 0
 
+        fun isRecent(atMs: Long?, nowMs: Long): Boolean =
+            atMs != null && nowMs - atMs <= Thresholds.SIGNAL_LEAD_WINDOW_MS
+
         fun closeManeuver() {
-            if (maneuverActive && !signaled && !signalUnknown) {
-                events += DrivingEvent(
-                    type = DrivingEventType.MISSING_TURN_SIGNAL,
-                    atMs = maneuverStartMs,
-                    value = maneuverPeak,
-                    confidence = Confidence.MEASURED,
+            if (maneuverActive) {
+                maneuvers += TurnManeuver(
+                    startMs = maneuverStartMs,
+                    peakDeg = maneuverPeak,
+                    signaled = signaled,
+                    signalUnknown = signalUnknown,
                 )
             }
             maneuverActive = false
@@ -276,6 +303,8 @@ class EventDetector {
         fun resetSegment() {
             closeManeuver()
             anchor = null
+            lastSignalMs = null
+            lastUnknownMs = null
         }
 
         for (sample in samples) {
@@ -291,9 +320,15 @@ class EventDetector {
             }
 
             when (sample.turnSignal) {
-                TurnSignal.LEFT, TurnSignal.RIGHT -> signaled = true
+                TurnSignal.LEFT, TurnSignal.RIGHT -> {
+                    lastSignalMs = sample.timestampMs
+                    if (maneuverActive) signaled = true
+                }
                 TurnSignal.OFF -> Unit
-                null -> signalUnknown = true
+                null -> {
+                    lastUnknownMs = sample.timestampMs
+                    if (maneuverActive) signalUnknown = true
+                }
             }
 
             val reference = anchor
@@ -314,6 +349,8 @@ class EventDetector {
                 if (magnitude >= Thresholds.MISSING_SIGNAL_STEER_DEG) {
                     maneuverActive = true
                     maneuverStartMs = sample.timestampMs
+                    signaled = isRecent(lastSignalMs, sample.timestampMs)
+                    signalUnknown = isRecent(lastUnknownMs, sample.timestampMs)
                     maneuverPeak = magnitude
                     direction = currentDirection
                 }
@@ -337,8 +374,16 @@ class EventDetector {
         }
         closeManeuver()
 
-        return events
+        return maneuvers
     }
+
+    /** 회전 동작 한 번과 그 구간의 방향지시등 상태. */
+    private data class TurnManeuver(
+        val startMs: Long,
+        val peakDeg: Float,
+        val signaled: Boolean,
+        val signalUnknown: Boolean,
+    )
 
     /** 주차·후진·저속은 도로 주행이 아니므로 방향지시등을 요구하지 않는다. */
     private fun isRoadDriving(sample: DrivingSample): Boolean {

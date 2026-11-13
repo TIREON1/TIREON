@@ -26,7 +26,7 @@ object MissionCatalog {
         MissionSpec(
             mission = PracticeMission.REVERSE_SENSE,
             requiresSpeed = true,
-            requiresSteering = true,
+            requiresSteering = false,
             requiresGear = true,
             requiresTurnSignal = false,
         ),
@@ -43,6 +43,13 @@ object MissionCatalog {
             requiresSteering = false,
             requiresGear = false,
             requiresTurnSignal = false,
+        ),
+        MissionSpec(
+            mission = PracticeMission.RIGHT_TURN_STOP,
+            requiresSpeed = true,
+            requiresSteering = true,
+            requiresGear = false,
+            requiresTurnSignal = true,
         ),
     )
 

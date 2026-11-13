@@ -8,8 +8,8 @@ import kotlin.test.assertTrue
 class MissionCatalogTest {
 
     @Test
-    fun `연습 미션은 다섯 종류다`() {
-        assertEquals(5, MissionCatalog.all().size)
+    fun `연습 미션은 여섯 종류다`() {
+        assertEquals(6, MissionCatalog.all().size)
     }
 
     @Test
@@ -30,17 +30,27 @@ class MissionCatalogTest {
     }
 
     @Test
-    fun `후진 감각은 기어와 조향이 필요하다`() {
+    fun `천천히 후진은 기어와 속도가 필요하다`() {
         val spec = MissionCatalog.spec(PracticeMission.REVERSE_SENSE)
 
         assertTrue(spec.requiresGear)
-        assertTrue(spec.requiresSteering)
+        assertTrue(spec.requiresSpeed)
+        assertFalse(spec.requiresSteering)
     }
 
     @Test
     fun `깜빡이 습관은 방향지시등과 조향이 필요하다`() {
         val spec = MissionCatalog.spec(PracticeMission.TURN_SIGNAL)
 
+        assertTrue(spec.requiresTurnSignal)
+        assertTrue(spec.requiresSteering)
+    }
+
+    @Test
+    fun `우회전 일시정지는 속도와 방향지시등과 조향이 필요하다`() {
+        val spec = MissionCatalog.spec(PracticeMission.RIGHT_TURN_STOP)
+
+        assertTrue(spec.requiresSpeed)
         assertTrue(spec.requiresTurnSignal)
         assertTrue(spec.requiresSteering)
     }

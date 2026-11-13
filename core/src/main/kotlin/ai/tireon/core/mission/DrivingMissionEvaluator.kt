@@ -47,7 +47,7 @@ class DrivingMissionEvaluator {
             DrivingMission.OVERALL -> DrivingMissionResult.Scored(
                 eventCount = accel + brake + steer + signal,
                 detail = "급가속 ${accel}회, 급제동 ${brake}회, " +
-                    "급조향 ${steer}회, 방향지시등 ${signal}회",
+                    "급조향 ${steer}회, 방향지시등 누락 ${signal}회",
             )
         }
     }
