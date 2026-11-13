@@ -202,6 +202,26 @@ TIREON은 총 3명의 팀원이 함께 개발하는 프로젝트입니다.
 
 ## 7. 실행 방법
 
+### 제출 APK와 테스트 환경
+
+| 항목 | 내용 |
+| --- | --- |
+| APK 위치 | [`apk/TIREON_TIREON_release.apk`](apk/TIREON_TIREON_release.apk) |
+| 빌드 | release, 팀 서명 키로 서명 (APK Signature Scheme v2) |
+| 버전 | 0.1.0 (versionCode 1), 패키지 `ai.tireon.app` |
+| 개발·테스트 에뮬레이터 | Pleos Connect Emulator v2.1.0 (Android 14, arm64) |
+| 화면 규격 | 2560×1440, 160dpi |
+
+에뮬레이터가 실행 중일 때 다음 명령으로 설치합니다.
+
+```bash
+adb install -r apk/TIREON_TIREON_release.apk
+```
+
+디버그 빌드가 설치되어 있으면 서명이 달라 설치가 거부됩니다. `adb uninstall ai.tireon.app`으로 먼저 지웁니다.
+
+차량 신호(기어, 속도, 조향, 방향지시등)는 에뮬레이터의 Virtual Console에서 바꿀 수 있습니다. 앱은 차량이 정지했을 때만 조작 화면을 보여 주고, 주행 중에는 시스템이 화면을 가립니다.
+
 ### 7.1 개발 환경 준비
 
 프로젝트 실행을 위해 다음 환경이 필요합니다.
