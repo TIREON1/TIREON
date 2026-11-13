@@ -19,9 +19,8 @@ class DrivingMissionEvaluator {
         if (samples.size < MIN_SAMPLES) {
             return DrivingMissionResult.Insufficient("주행 데이터가 부족해요")
         }
-        if (samples.all { it.speedMps == null }) {
-            return DrivingMissionResult.Insufficient("속도 신호를 받지 못했어요")
-        }
+        val spec = DrivingMissionCatalog.of(mission)
+        insufficientSignal(spec, samples)?.let { return it }
 
         val accel = events.countOf(DrivingEventType.HARSH_ACCEL)
         val brake = events.countOf(DrivingEventType.HARSH_BRAKE)
@@ -54,6 +53,26 @@ class DrivingMissionEvaluator {
 
     private fun List<DrivingEvent>.countOf(type: DrivingEventType): Int =
         count { it.type == type }
+
+    /** 미션 정의가 요구하는 신호가 샘플에 하나도 없으면 판정하지 않는다. */
+    private fun insufficientSignal(
+        spec: DrivingMissionSpec,
+        samples: List<DrivingSample>,
+    ): DrivingMissionResult.Insufficient? = when {
+        spec.requiresSpeed && samples.all { it.speedMps == null } ->
+            DrivingMissionResult.Insufficient("속도 신호를 받지 못했어요")
+
+        spec.requiresSteering && samples.all { it.steeringDeg == null } ->
+            DrivingMissionResult.Insufficient("조향 신호를 받지 못했어요")
+
+        spec.requiresTurnSignal && samples.all { it.turnSignal == null } ->
+            DrivingMissionResult.Insufficient("방향지시등 신호를 받지 못했어요")
+
+        spec.requiresBrake && samples.all { it.brakePressed == null } ->
+            DrivingMissionResult.Insufficient("브레이크 신호를 받지 못했어요")
+
+        else -> null
+    }
 
     private companion object {
         const val MIN_SAMPLES = 20

@@ -4,6 +4,7 @@ import ai.tireon.core.driving.Confidence
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
 import ai.tireon.core.driving.DrivingSample
+import ai.tireon.core.driving.TurnSignal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,7 +23,7 @@ class DrivingMissionByMissionTest {
             speedMps = 10f,
             steeringDeg = 0f,
             brakePressed = false,
-            turnSignal = null,
+            turnSignal = TurnSignal.OFF,
             gear = null,
         )
     }

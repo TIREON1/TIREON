@@ -33,4 +33,5 @@ data class MissionSpec(
     val requiresSteering: Boolean,
     val requiresGear: Boolean,
     val requiresTurnSignal: Boolean,
+    val requiresBrake: Boolean = false,
 )

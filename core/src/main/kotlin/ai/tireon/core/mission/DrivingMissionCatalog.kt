@@ -6,6 +6,7 @@ data class DrivingMissionSpec(
     val requiresSpeed: Boolean,
     val requiresSteering: Boolean,
     val requiresTurnSignal: Boolean,
+    val requiresBrake: Boolean = false,
 )
 
 /**
@@ -25,6 +26,7 @@ object DrivingMissionCatalog {
             requiresSpeed = true,
             requiresSteering = false,
             requiresTurnSignal = false,
+            requiresBrake = true,
         ),
         DrivingMissionSpec(
             mission = DrivingMission.SIGNAL_HABIT,
@@ -43,6 +45,7 @@ object DrivingMissionCatalog {
             requiresSpeed = true,
             requiresSteering = true,
             requiresTurnSignal = true,
+            requiresBrake = true,
         ),
     )
 

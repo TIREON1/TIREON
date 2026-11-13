@@ -28,12 +28,18 @@ class DrivingMissionTest {
         confidence = Confidence.MEASURED,
     )
 
-    private fun sample(atMs: Long, speed: Float = 10f) = DrivingSample(
+    private fun sample(
+        atMs: Long,
+        speed: Float? = 10f,
+        steering: Float? = 0f,
+        signal: TurnSignal? = TurnSignal.OFF,
+        brake: Boolean? = false,
+    ) = DrivingSample(
         timestampMs = atMs,
         speedMps = speed,
-        steeringDeg = 0f,
-        brakePressed = false,
-        turnSignal = TurnSignal.OFF,
+        steeringDeg = steering,
+        brakePressed = brake,
+        turnSignal = signal,
         gear = Gear.DRIVE,
     )
 
@@ -139,6 +145,58 @@ class DrivingMissionTest {
         assertTrue(scored.detail.contains("급제동"))
         assertTrue(scored.detail.contains("급조향"))
         assertTrue(scored.detail.contains("방향지시등"))
+    }
+
+    @Test
+    fun `부드러운 가감속 미션은 브레이크 신호가 없으면 판정하지 않는다`() {
+        val samples = (0 until 30).map { sample(it * 1_000L, brake = null) }
+
+        val result = evaluator.evaluate(
+            mission = DrivingMission.SMOOTH_DRIVING,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<DrivingMissionResult.Insufficient>(result)
+    }
+
+    @Test
+    fun `방향지시등 습관 미션은 방향지시등 신호가 없으면 판정하지 않는다`() {
+        val samples = (0 until 30).map { sample(it * 1_000L, signal = null) }
+
+        val result = evaluator.evaluate(
+            mission = DrivingMission.SIGNAL_HABIT,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<DrivingMissionResult.Insufficient>(result)
+    }
+
+    @Test
+    fun `안정적인 조향 미션은 조향 신호가 없으면 판정하지 않는다`() {
+        val samples = (0 until 30).map { sample(it * 1_000L, steering = null) }
+
+        val result = evaluator.evaluate(
+            mission = DrivingMission.STABLE_STEERING,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<DrivingMissionResult.Insufficient>(result)
+    }
+
+    @Test
+    fun `전체 점검 미션은 필요한 신호가 하나라도 없으면 판정하지 않는다`() {
+        val samples = (0 until 30).map { sample(it * 1_000L, brake = null) }
+
+        val result = evaluator.evaluate(
+            mission = DrivingMission.OVERALL,
+            samples = samples,
+            events = emptyList(),
+        )
+
+        assertIs<DrivingMissionResult.Insufficient>(result)
     }
 
     @Test

@@ -151,7 +151,11 @@ class DrivingSessionViewModel(
             scoreText = (scoreResult as? ScoreResult.Scored)?.score?.value?.toString(),
             message = messageOf(scoreResult),
             mission = mission,
-            missionDetail = (missionResult as? DrivingMissionResult.Scored)?.detail,
+            missionDetail = when (val evaluated = missionResult) {
+                is DrivingMissionResult.Scored -> evaluated.detail
+                is DrivingMissionResult.Insufficient -> evaluated.reason
+                null -> null
+            },
             eventCount = events.size,
         )
         persist(scoreResult, events, distanceKm, voiceGuidance.prepareFinish(result))

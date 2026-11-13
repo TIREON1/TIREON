@@ -62,6 +62,9 @@ class MissionEvaluator {
         if (spec.requiresTurnSignal && samples.all { it.turnSignal == null }) {
             return MissionResult.Insufficient("방향지시등 신호를 받지 못했어요")
         }
+        if (spec.requiresBrake && samples.all { it.brakePressed == null }) {
+            return MissionResult.Insufficient("브레이크 신호를 받지 못했어요")
+        }
         return null
     }
 
@@ -255,8 +258,12 @@ class MissionEvaluator {
             if (kmh != null && isMoving(kmh)) approached = true
 
             if (approached && right && kmh != null && isStopped(kmh)) {
-                val start = pauseStartMs ?: sample.timestampMs.also { pauseStartMs = it }
-                sample.steeringDeg?.let { steerAtPause = it }
+                // 기준 조향각은 정지가 시작된 시점의 값이다. 정지 중 매 샘플마다
+                // 갱신하면, 멈춘 뒤 핸들을 미리 돌려둔 경우 이동 후 변화량이 0이 된다.
+                val start = pauseStartMs ?: sample.timestampMs.also {
+                    pauseStartMs = it
+                    steerAtPause = sample.steeringDeg
+                }
                 if (sample.timestampMs - start >= REQUIRED_PAUSE_MS) paused = true
             } else {
                 pauseStartMs = null
