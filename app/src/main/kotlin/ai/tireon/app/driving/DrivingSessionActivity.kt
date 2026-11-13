@@ -17,6 +17,7 @@ import ai.tireon.pleos.vehicle.VehicleSession
 import ai.tireon.pleos.coach.PleosCoachSpeaker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -87,6 +88,12 @@ class DrivingSessionActivity : ComponentActivity() {
                 val state = viewModel.state.collectAsStateWithLifecycle()
                 val result = viewModel.result.collectAsStateWithLifecycle()
                 val saveStatus = viewModel.saveStatus.collectAsStateWithLifecycle()
+
+                // 뒤로가기로 액티비티를 닫으면 ViewModel과 미저장 기록이 사라진다.
+                // 기록 중에는 태스크만 배경으로 보내고 정차 후 종료 버튼으로 저장한다.
+                BackHandler(enabled = state.value.collecting) {
+                    moveTaskToBack(true)
+                }
 
                 TireonSurface {
                     DrivingSessionScreen(
