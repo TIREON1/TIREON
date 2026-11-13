@@ -26,9 +26,16 @@ class SpeechPolicyTest {
     }
 
     @Test
-    fun `같은 문장은 간격이 지나도 다시 읽지 않는다`() {
+    fun `같은 문장은 30초 안에는 다시 읽지 않는다`() {
         assertFalse(
             SpeechPolicy.shouldSpeak(10_000L, 1_000L, "출발 좋아요", "출발 좋아요"),
+        )
+    }
+
+    @Test
+    fun `같은 문장도 30초가 지나면 다시 읽는다`() {
+        assertTrue(
+            SpeechPolicy.shouldSpeak(31_000L, 1_000L, "출발 좋아요", "출발 좋아요"),
         )
     }
 
