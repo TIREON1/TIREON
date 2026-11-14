@@ -94,13 +94,13 @@ jobs:
             - name: Prepare submission APK
               run: |
                   mkdir -p apk
-                  cp "${{ steps.apk.outputs.path }}" apk/TIREON_release.apk
+                  cp "${{ steps.apk.outputs.path }}" apk/TIREON_TIREON_release.apk
 
             - name: Upload APK artifact
               uses: actions/upload-artifact@v7
               with:
                   name: release-apk
-                  path: apk/TIREON_release.apk
+                  path: apk/TIREON_TIREON_release.apk
                   if-no-files-found: error
 
             - name: Create GitHub Release
@@ -110,7 +110,7 @@ jobs:
                   TAG: ${{ github.ref_name }}
               run: |
                   gh release create "$TAG" \
-                    "apk/TIREON_release.apk#TIREON release APK" \
+                    "apk/TIREON_TIREON_release.apk#TIREON release APK" \
                     --title "$TAG" \
                     --generate-notes
 
@@ -119,8 +119,8 @@ jobs:
                   {
                     echo "### Release APK"
                     echo ""
-                    echo "- 파일: \`apk/TIREON_release.apk\`"
-                    echo "- SHA-256: \`$(sha256sum apk/TIREON_release.apk | cut -d' ' -f1)\`"
+                    echo "- 파일: \`apk/TIREON_TIREON_release.apk\`"
+                    echo "- SHA-256: \`$(sha256sum apk/TIREON_TIREON_release.apk | cut -d' ' -f1)\`"
                   } >> "$GITHUB_STEP_SUMMARY"
 
             - name: Clean up signing material
