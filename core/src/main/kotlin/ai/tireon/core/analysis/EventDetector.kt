@@ -50,7 +50,28 @@ class EventDetector {
      * 실제로 동작이 있었는지 확인할 때 쓴다.
      */
     fun countSignaledTurns(samples: List<DrivingSample>): Int =
-        scanTurnManeuvers(dropOutOfOrder(samples)).count { it.signaled }
+        scanTurnSignals(samples).signaledTurns
+
+    /**
+     * 회전 동작의 방향지시등 판정 요약.
+     *
+     * [signaledTurns]는 도로 주행임을 확인한 뒤 방향지시등을 켜고 돈 횟수다.
+     * [unknownTurns]는 조향은 움직였는데 속도 신호가 없어 도로 주행인지 판단하지
+     * 못한 동작 수다. 이 값이 0보다 크면 "회전하지 않았다"고 단정할 수 없다.
+     */
+    data class TurnSignalSummary(
+        val signaledTurns: Int,
+        val unknownTurns: Int,
+    )
+
+    fun scanTurnSignals(samples: List<DrivingSample>): TurnSignalSummary =
+        scanTurnManeuvers(dropOutOfOrder(samples)).let { maneuvers ->
+            TurnSignalSummary(
+                // 도로 주행 여부를 모르는 회전은 성공으로도 실패로도 세지 않는다.
+                signaledTurns = maneuvers.count { it.signaled && !it.dataUnknown },
+                unknownTurns = maneuvers.count { it.dataUnknown },
+            )
+        }
 
     /**
      * 시간이 뒤로 가거나 같은 샘플을 버린다.
@@ -272,7 +293,8 @@ class EventDetector {
         includeOpenTurn: Boolean,
     ): List<DrivingEvent> =
         scanTurnManeuvers(samples, includeOpenTurn)
-            .filter { !it.signaled && !it.signalUnknown }
+            // 신호 공백으로 도로 주행 여부를 모르는 동작은 누락으로 단정하지 않는다.
+            .filter { !it.signaled && !it.signalUnknown && !it.dataUnknown }
             .map {
                 DrivingEvent(
                     type = DrivingEventType.MISSING_TURN_SIGNAL,
@@ -294,6 +316,7 @@ class EventDetector {
         var maneuverActive = false
         var signaled = false
         var signalUnknown = false
+        var dataUnknown = false
         var lastSignalMs: Long? = null
         var lastSignal: TurnSignal? = null
         var lastUnknownMs: Long? = null
@@ -309,12 +332,14 @@ class EventDetector {
                     peakDeg = maneuverPeak,
                     signaled = signaled,
                     signalUnknown = signalUnknown,
+                    dataUnknown = dataUnknown,
                 )
             }
             maneuverActive = false
             maneuverPeak = 0f
             signaled = false
             signalUnknown = false
+            dataUnknown = false
             direction = 0
         }
 
@@ -332,7 +357,10 @@ class EventDetector {
                 continue
             }
 
-            if (!isRoadDriving(sample)) {
+            // 주차·후진은 도로 주행이 아니지만, 속도를 모르는 것은 "도로 주행이 아님"이
+            // 아니다. 신호 공백으로 동작을 끊으면 회전을 하지 않은 것으로 오판한다.
+            val roadState = roadState(sample)
+            if (roadState == RoadState.NO) {
                 resetSegment()
                 continue
             }
@@ -373,6 +401,7 @@ class EventDetector {
                     signaled = isRecent(lastSignalMs, sample.timestampMs) &&
                         signalMatches(lastSignal, currentDirection)
                     signalUnknown = isRecent(lastUnknownMs, sample.timestampMs)
+                    dataUnknown = roadState == RoadState.UNKNOWN
                     maneuverPeak = magnitude
                     direction = currentDirection
                 }
@@ -405,13 +434,17 @@ class EventDetector {
         val peakDeg: Float,
         val signaled: Boolean,
         val signalUnknown: Boolean,
+        /** 회전 시작 시점의 도로 주행 여부를 신호 부족으로 판단하지 못했는지. */
+        val dataUnknown: Boolean,
     )
 
-    /** 주차·후진·저속은 도로 주행이 아니므로 방향지시등을 요구하지 않는다. */
-    private fun isRoadDriving(sample: DrivingSample): Boolean {
-        if (sample.gear == Gear.PARK || sample.gear == Gear.REVERSE) return false
-        val speed = sample.speedMps ?: return false
-        return speed > 0f
+    /** 주차·후진은 도로 주행이 아니다. 속도를 모르면 판단할 수 없다. */
+    private enum class RoadState { YES, NO, UNKNOWN }
+
+    private fun roadState(sample: DrivingSample): RoadState {
+        if (sample.gear == Gear.PARK || sample.gear == Gear.REVERSE) return RoadState.NO
+        val speed = sample.speedMps ?: return RoadState.UNKNOWN
+        return if (speed > 0f) RoadState.YES else RoadState.NO
     }
 
     /**

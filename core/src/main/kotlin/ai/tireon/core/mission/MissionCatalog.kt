@@ -33,7 +33,9 @@ object MissionCatalog {
         ),
         MissionSpec(
             mission = PracticeMission.TURN_SIGNAL,
-            requiresSpeed = false,
+            // 회전 여부는 속도로 도로 주행을 확인해야 판정할 수 있다. 속도가 없으면
+            // 회전을 못 했다고 단정하지 않고 판정 불가로 돌려준다.
+            requiresSpeed = true,
             requiresSteering = true,
             requiresGear = false,
             requiresTurnSignal = true,

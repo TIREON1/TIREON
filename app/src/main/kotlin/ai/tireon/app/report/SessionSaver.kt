@@ -2,6 +2,7 @@ package ai.tireon.app.report
 
 import ai.tireon.core.report.DrivingSessionRecord
 import ai.tireon.core.report.SessionRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,8 +27,14 @@ class SessionSaver(
         onSaved: (Result<Unit>) -> Unit = {},
     ) {
         scope.launch {
-            val result = runCatching { repository.save(record) }
-                .getOrElse { Result.failure(it) }
+            val result = try {
+                repository.save(record)
+            } catch (e: CancellationException) {
+                // 스코프 취소는 저장 실패가 아니다. 콜백으로 바꾸지 않고 취소를 유지한다.
+                throw e
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
             withContext(callbackDispatcher) { onSaved(result) }
         }
     }

@@ -3,6 +3,7 @@ package ai.tireon.app.report
 import ai.tireon.core.report.DrivingSessionRecord
 import ai.tireon.core.report.SessionRepository
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -43,14 +44,21 @@ class FileSessionRepository(
 
     override suspend fun save(record: DrivingSessionRecord): Result<Unit> = mutex.withLock {
         withContext(ioDispatcher) {
-            runCatching {
+            try {
                 val current = readAll(failOnError = true)
                 val updated = (current + record)
                     .distinctBy { it.id }
                     .sortedByDescending { it.startedAtMs }
                     .take(maxRecords)
                 writeAll(updated)
-            }.onFailure { Log.e(TAG, "세션 기록 저장 실패", it) }
+                Result.success(Unit)
+            } catch (e: CancellationException) {
+                // 코루틴 취소는 저장 실패가 아니다. 삼키면 상위 취소가 사라진다.
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "세션 기록 저장 실패", e)
+                Result.failure(e)
+            }
         }
     }
 

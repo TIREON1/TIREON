@@ -106,14 +106,18 @@ class MissionEvaluator {
         events: List<DrivingEvent>,
     ): MissionResult {
         val missing = events.count { it.type == DrivingEventType.MISSING_TURN_SIGNAL }
+        val turns = detector.scanTurnSignals(samples)
         return when {
             missing > 0 ->
                 MissionResult.Failed("방향지시등 없이 조향한 구간이 있었어요 (${missing}번)")
 
-            detector.countSignaledTurns(samples) == 0 ->
-                MissionResult.Failed("방향지시등을 켜고 핸들을 돌려보세요")
+            turns.signaledTurns > 0 -> MissionResult.Success("방향지시등을 잘 켰어요")
 
-            else -> MissionResult.Success("방향지시등을 잘 켰어요")
+            // 속도 신호가 없으면 회전했는지 자체를 알 수 없다. 하지 않았다고 단정하지 않는다.
+            turns.unknownTurns > 0 ->
+                MissionResult.Insufficient("속도 신호를 받지 못해 회전을 확인할 수 없어요")
+
+            else -> MissionResult.Failed("방향지시등을 켜고 핸들을 돌려보세요")
         }
     }
 
@@ -139,25 +143,19 @@ class MissionEvaluator {
      * 후진으로 [REQUIRED_REVERSE_MS] 이상 움직였고 [MAX_REVERSE_KMH]를 넘지 않았는지 본다.
      *
      * 후진 기어로 움직인 구간이 연속으로 유지되어야 한다. 기어만 넣고 서 있거나
-     * 잠깐 스친 것은 인정하지 않는다.
+     * 잠깐 스친 것은 인정하지 않는다. 다만 기어 신호는 콜백 사이에 잠깐 비므로,
+     * [GEAR_GAP_TOLERANCE_MS] 이내의 공백은 같은 구간으로 이어 본다.
      */
     private fun judgeReverse(samples: List<DrivingSample>): MissionResult {
-        var longestRunMs = 0L
-        var runStartMs: Long? = null
         var maxKmh: Double? = null
-
         for (sample in samples) {
             val kmh = sample.speedKmh()
             if (sample.gear == Gear.REVERSE && kmh != null) {
                 maxKmh = maxOf(maxKmh ?: 0.0, kmh)
             }
-            if (sample.gear == Gear.REVERSE && kmh != null && !isStopped(kmh)) {
-                val start = runStartMs ?: sample.timestampMs.also { runStartMs = it }
-                longestRunMs = maxOf(longestRunMs, sample.timestampMs - start)
-            } else {
-                runStartMs = null
-            }
         }
+
+        val longestRunMs = longestReverseRunMs(samples)
 
         val reversed = samples.any { it.gear == Gear.REVERSE }
         return when {
@@ -172,6 +170,53 @@ class MissionEvaluator {
 
             else -> MissionResult.Success("천천히 후진했어요")
         }
+    }
+
+    /**
+     * 후진으로 움직인 가장 긴 구간(ms).
+     *
+     * 기어 신호가 [GEAR_GAP_TOLERANCE_MS] 이내로 끊긴 구간은 앞뒤와 이어 붙인다.
+     * 콜백 공백은 실제 후진이 계속되는 중에 생기기 때문이다. 공백이 그보다 길면
+     * 움직임을 확인할 수 없으므로 구간을 끊는다.
+     */
+    private fun longestReverseRunMs(samples: List<DrivingSample>): Long {
+        var longest = 0L
+        var runStartMs: Long? = null
+        var unknownSinceMs: Long? = null
+
+        for (sample in samples) {
+            val kmh = sample.speedKmh()
+            val moving = kmh != null && !isStopped(kmh)
+
+            when {
+                sample.gear == Gear.REVERSE && moving -> {
+                    val unknownStart = unknownSinceMs
+                    // 끊긴 공백이 허용 범위를 넘으면 이전 구간과 이어 붙이지 않는다.
+                    val continues = unknownStart == null ||
+                        sample.timestampMs - unknownStart <= GEAR_GAP_TOLERANCE_MS
+                    if (!continues) runStartMs = null
+                    unknownSinceMs = null
+                    if (runStartMs == null) runStartMs = sample.timestampMs
+                    longest = maxOf(longest, sample.timestampMs - requireNotNull(runStartMs))
+                }
+
+                // 기어만 끊긴 공백. 아직 허용 범위 안이면 구간을 유지한다.
+                sample.gear == null && moving && runStartMs != null -> {
+                    val unknownStart = unknownSinceMs ?: sample.timestampMs
+                    unknownSinceMs = unknownStart
+                    if (sample.timestampMs - unknownStart > GEAR_GAP_TOLERANCE_MS) {
+                        runStartMs = null
+                        unknownSinceMs = null
+                    }
+                }
+
+                else -> {
+                    runStartMs = null
+                    unknownSinceMs = null
+                }
+            }
+        }
+        return longest
     }
 
     /**
@@ -230,7 +275,8 @@ class MissionEvaluator {
      * 그 뒤에 움직이면서 핸들을 [Thresholds.MISSING_SIGNAL_STEER_DEG] 이상 돌렸는지 본다.
      *
      * 회전 방향은 조향각 부호로 가리지 않는다. 어느 쪽이 양수인지 실차에서 확인하지
-     * 못했기 때문에 방향은 방향지시등으로만 확인한다.
+     * 못했기 때문에 방향은 방향지시등으로만 확인한다. 대신 후진 기어로 움직인 구간은
+     * 우회전이 아니므로 성공으로 보지 않는다.
      */
     private fun judgeRightTurnStop(samples: List<DrivingSample>): MissionResult {
         var approached = false
@@ -247,7 +293,10 @@ class MissionEvaluator {
             if (paused) {
                 val steer = sample.steeringDeg
                 val reference = steerAtPause
-                if (kmh != null && !isStopped(kmh) && steer != null && reference != null &&
+                // 후진 기어이거나 차속이 음수면 우회전이 아니다.
+                val forward = kmh != null && !isStopped(kmh) &&
+                    sample.gear != Gear.REVERSE && (sample.speedMps ?: 0f) >= 0f
+                if (forward && steer != null && reference != null &&
                     abs(steer - reference) >= Thresholds.MISSING_SIGNAL_STEER_DEG
                 ) {
                     return MissionResult.Success("멈춘 뒤에 우회전했어요")
@@ -298,6 +347,9 @@ class MissionEvaluator {
         const val MOVING_KMH = 10.0
         const val REQUIRED_REVERSE_MS = 3_000L
         const val MAX_REVERSE_KMH = 10.0
+
+        /** 기어 신호가 이 시간 안에 끊긴 것은 같은 후진 구간으로 본다. */
+        const val GEAR_GAP_TOLERANCE_MS = 500L
         const val STEADY_MIN_KMH = 15.0
         const val STEADY_MAX_KMH = 25.0
         const val REQUIRED_STEADY_MS = 5_000L
