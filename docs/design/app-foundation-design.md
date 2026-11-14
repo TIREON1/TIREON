@@ -28,7 +28,8 @@ TIREON의 앱 셸과 구조를 세웁니다. 화면을 먼저 그리지 않고
 
 포함하는 것:
 
-- 앱 셸 (액티비티 2개, 내비게이션, 테마)
+- 앱 셸 (`MainActivity`, `PracticeActivity`, `DrivingSessionActivity`, 내비게이션, 테마)
+- 주행 기록 중 프로세스를 유지하는 포그라운드 서비스 `DrivingRecordService`
 - Pleos 신호 수집 계층 (`:pleos`)
 - 분석과 점수 도메인 (`:core`)
 - 연습 미션 6종, 주행 미션 4종 정의
@@ -79,7 +80,7 @@ TIREON의 앱 셸과 구조를 세웁니다. 화면을 먼저 그리지 않고
 | 신호 | 소스 | 단위 | 비고 |
 |---|---|---|---|
 | 속도 | AAOS `PERF_VEHICLE_SPEED` | m/s | 실측 5~10Hz, 최소 간격 100ms |
-| 기어 | Pleos `Gear` | enum | P, R, N, D |
+| 기어 | AAOS `GEAR_SELECTION` | enum | P, R, N, D. Pleos `Gear`는 deprecated라 `AaosGearReader`로 읽음 |
 | 누적 거리 | Pleos `Odometer` | km | 차분해서 사용 |
 | 브레이크 페달 | Pleos `Brake` | boolean | 급제동 이중 확인용 |
 | 조향각 | Pleos `SteeringWheel` | degree | 부호가 반전되어 들어옴 |
@@ -98,6 +99,11 @@ DO(Distraction Optimization)는 앱 전체가 아니라 액티비티 단위로 �
 |---|---|---|
 | `MainActivity` | 선언 안 함 | 홈, 미션, 리포트, 설정. 주행 중에는 시스템이 차단 |
 | `PracticeActivity` | `true` | 연습 세션. 주행 제한 중에도 유지 |
+| `DrivingSessionActivity` | 선언 안 함 | 주행 기록 시작·종료와 결과. 주행 중에는 시스템이 차단 |
+
+주행 기록은 `DrivingSessionActivity`가 가려져도 이어집니다. 수집은
+`DrivingSessionViewModel`이 하고, 포그라운드 서비스 `DrivingRecordService`가
+프로세스를 유지합니다. Android 14는 캐시 상태 프로세스를 얼리기 때문입니다.
 
 ```xml
 <activity
@@ -392,12 +398,8 @@ SDK 타입은 반환하지 않습니다. `DrivingSample`은 `:core` 타입입니
 
 ### 6.4 기존 코드 정리
 
-`DrivingViewModel`이 현재 `:pleos`에 있습니다. ViewModel은 UI 관심사이므로
-`:app`으로 옮깁니다.
-
-이동 시점은 앱 셸 단계입니다. 분석 계층은 SDK와 UI에 의존하지 않아 먼저
-완성할 수 있습니다. 반대로 ViewModel을 옮기려면 `:app` 화면 구조가 먼저
-정해져야 합니다. 분석 계층 작업에서 이 항목을 건드리지 않는 이유입니다.
+`DrivingViewModel`은 `:pleos`에서 `:app`(`ai.tireon.app.driving`)으로 옮겼습니다.
+ViewModel은 UI 관심사이기 때문입니다. 앱 셸 단계에서 화면 구조를 정한 뒤 옮겼습니다.
 
 그 외 기존 코드는 건드리지 않습니다.
 
@@ -418,6 +420,10 @@ Room은 1차 범위에서 과합니다. 세션 수가 늘면 그때 검토합니
 ---
 
 ## 7. AI 코치 계층
+
+> **구현 상태:** 룰 엔진과 TTS만 구현했습니다. LLM 다듬기(`CoachRefiner`)는
+> 구현하지 않았고 향후 과제입니다. LLM 추론 SDK가 에뮬레이터 v2.1에서 지원
+> 종료되었기 때문입니다(1.2 제외 항목). 아래 LLM 관련 내용은 설계 기록으로 남깁니다.
 
 ### 7.1 2단 구조
 
@@ -505,7 +511,7 @@ tts.speak(message.text)
 | `ScoreCalculator` | NaN, 무한대, 음수 거리 |
 | `CoachMessages` | 이벤트별 문장과 evidence 생성 |
 | `CoachMessages` | 감점 0 항목 제외 |
-| `CoachRefiner` 가드 | 숫자 불변 위반 응답 폐기 |
+| `CoachRefiner` 가드 | 숫자 불변 위반 응답 폐기 (미구현, 7장 참고) |
 
 합성 데이터로 검증하므로 에뮬레이터 없이 빠르게 돌릴 수 있습니다.
 
@@ -556,6 +562,6 @@ DO 검증을 포기한 이유와 근거는
 4. 앱 셸: `MainActivity`, 내비게이션, 테마, 반응형 레이아웃
 5. 연습 세션: `PracticeActivity`, DO 선언, `CarUxRestrictions`
 6. 리포트: 저장소, 리포트 화면
-7. LLM 연동 (선택): `CoachRefiner`
+7. LLM 연동 (선택): `CoachRefiner`. 구현하지 않음, 향후 과제
 
 1단계와 2단계에서 9장의 상위 두 항목을 함께 검증합니다.
