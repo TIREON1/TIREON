@@ -1,8 +1,6 @@
 package ai.tireon.pleos.signal
 
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
-import ai.pleos.playground.vehicle.constant.control.VehicleGear
-import ai.tireon.core.driving.Gear
 import ai.tireon.core.driving.TurnSignal
 
 /**
@@ -11,25 +9,6 @@ import ai.tireon.core.driving.TurnSignal
  * `internal`인 이유는 SDK 타입이 공개 API로 새지 않게 하기 위함이다.
  */
 internal object SignalMapper {
-
-    fun gear(value: VehicleGear?): Gear? = when (value) {
-        null -> null
-        VehicleGear.GEAR_PARK -> Gear.PARK
-        VehicleGear.GEAR_REVERSE -> Gear.REVERSE
-        VehicleGear.GEAR_NEUTRAL -> Gear.NEUTRAL
-        VehicleGear.GEAR_DRIVE,
-        VehicleGear.GEAR_1,
-        VehicleGear.GEAR_2,
-        VehicleGear.GEAR_3,
-        VehicleGear.GEAR_4,
-        VehicleGear.GEAR_5,
-        VehicleGear.GEAR_6,
-        VehicleGear.GEAR_7,
-        VehicleGear.GEAR_8,
-        VehicleGear.GEAR_9,
-        -> Gear.DRIVE
-        VehicleGear.GEAR_UNKNOWN -> Gear.UNKNOWN
-    }
 
     fun turnSignal(value: TurnSignalValue?): TurnSignal? = when (value) {
         null -> null
