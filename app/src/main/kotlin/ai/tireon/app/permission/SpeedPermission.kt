@@ -10,11 +10,8 @@ package ai.tireon.app.permission
  */
 object SpeedPermission {
 
-    /** 차속 권한 이름. */
-    const val PERMISSION = "android.car.permission.CAR_SPEED"
-
     /** 요청할 권한. */
-    val REQUIRED: List<String> = listOf(PERMISSION)
+    val REQUIRED: List<String> = listOf("android.car.permission.CAR_SPEED")
 
     /** 거부됐을 때의 안내 문구. */
     const val DENIED_MESSAGE = "속도 권한이 없어 급가속·급제동을 분석할 수 없어요"

@@ -114,6 +114,6 @@ class PracticeActivity : ComponentActivity() {
     private fun hasSpeedPermission(): Boolean =
         androidx.core.content.ContextCompat.checkSelfPermission(
             this,
-            ai.tireon.app.permission.SpeedPermission.PERMISSION,
+            "android.car.permission.CAR_SPEED",
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 }

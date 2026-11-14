@@ -61,7 +61,7 @@ fun rememberSpeedPermissionState(): Boolean? {
         if (!SpeedPermission.shouldRequest(SpeedPermission.Decision.REQUEST, requestInFlight)) return
         requestInFlight = true
         askedBefore = true
-        launcher.launch(SpeedPermission.PERMISSION)
+        launcher.launch(SpeedPermission.REQUIRED.first())
     }
 
     // 복귀할 때마다 시스템 값으로 다시 판정한다. 사용자가 설정에서 권한을 켜고
@@ -137,11 +137,11 @@ fun rememberSpeedPermissionState(): Boolean? {
 }
 
 private fun Context.hasSpeedPermission(): Boolean =
-    ContextCompat.checkSelfPermission(this, SpeedPermission.PERMISSION) == PackageManager.PERMISSION_GRANTED
+    ContextCompat.checkSelfPermission(this, SPEED_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
 private fun Context.shouldShowRationale(): Boolean {
     val activity = this as? android.app.Activity ?: return false
-    return ActivityCompat.shouldShowRequestPermissionRationale(activity, SpeedPermission.PERMISSION)
+    return ActivityCompat.shouldShowRequestPermissionRationale(activity, SPEED_PERMISSION)
 }
 
 private fun Context.openAppSettings() {
@@ -154,3 +154,4 @@ private fun Context.openAppSettings() {
 }
 
 private const val TAG = "SpeedPermission"
+private const val SPEED_PERMISSION = "android.car.permission.CAR_SPEED"

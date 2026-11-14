@@ -39,6 +39,7 @@
     <string name="report_empty">아직 주행 기록이 없어요</string>
     <string name="report_score">%1$d점</string>
     <string name="report_no_score">점수를 내지 못했어요</string>
+    <string name="report_save_failed">기록을 저장하지 못했어요</string>
 
     <string name="mission_smooth_start_name">부드러운 출발</string>
     <string name="mission_smooth_start_description">정지 상태에서 급가속 없이 시속 10km 이상으로 출발합니다.</string>
@@ -84,6 +85,7 @@
     <string name="driving_mission_overall_name">전체 점검</string>
     <string name="driving_mission_overall_description">모든 지표를 함께 봅니다.</string>
     <string name="driving_mission_label">주행 미션: %1$s</string>
+    <string name="driving_mission_none">미션 없이 주행</string>
 
     <string name="settings_app_section">앱 정보</string>
     <string name="settings_app_version">버전</string>

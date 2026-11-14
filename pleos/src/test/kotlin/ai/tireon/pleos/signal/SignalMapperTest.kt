@@ -1,12 +1,34 @@
 package ai.tireon.pleos.signal
 
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
+import ai.pleos.playground.vehicle.constant.control.VehicleGear
+import ai.tireon.core.driving.Gear
 import ai.tireon.core.driving.TurnSignal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class SignalMapperTest {
+
+    @Test
+    fun `기어 값을 도메인 기어로 바꾼다`() {
+        assertEquals(Gear.PARK, SignalMapper.gear(VehicleGear.GEAR_PARK))
+        assertEquals(Gear.REVERSE, SignalMapper.gear(VehicleGear.GEAR_REVERSE))
+        assertEquals(Gear.NEUTRAL, SignalMapper.gear(VehicleGear.GEAR_NEUTRAL))
+        assertEquals(Gear.DRIVE, SignalMapper.gear(VehicleGear.GEAR_DRIVE))
+    }
+
+    @Test
+    fun `숫자 기어는 드라이브로 본다`() {
+        assertEquals(Gear.DRIVE, SignalMapper.gear(VehicleGear.GEAR_1))
+        assertEquals(Gear.DRIVE, SignalMapper.gear(VehicleGear.GEAR_6))
+    }
+
+    @Test
+    fun `알 수 없는 기어는 UNKNOWN이다`() {
+        assertEquals(Gear.UNKNOWN, SignalMapper.gear(VehicleGear.GEAR_UNKNOWN))
+        assertNull(SignalMapper.gear(null))
+    }
 
     @Test
     fun `방향지시등 값을 도메인 값으로 바꾼다`() {
