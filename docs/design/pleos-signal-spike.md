@@ -353,6 +353,13 @@ DO가 동작하는 것을 확인했지만, 앱이 `CarUxRestrictions`를 구독�
    액티비티 단위로 허용 여부만 판단합니다.
 
 이 로직은 순수 함수로 분리해 JVM에서 검증합니다.
+### 대응: DO 선언과 자체 축소를 함께 둔다
+
+플랫폼이 막아주는지에 의존하지 않습니다. 앱이 `CarUxRestrictions`를 구독해
+`requiresDO=true`이면 스스로 화면을 숫자 1개로 축소합니다. 플랫폼이
+차단하든 안 하든 안전한 상태가 유지됩니다.
+
+이 로직은 에뮬레이터에서 시험할 수 없으므로 단위 테스트로 검증합니다.
 `CarUxRestrictions` → UI 상태 변환을 순수 함수로 분리하면 JVM에서 확인할 수
 있습니다.
 
@@ -425,7 +432,7 @@ median: 110.3 ms   mean: 141.8 ms   약 5~10 Hz
 
 ```
 속도          AAOS CarPropertyManager (PERF_VEHICLE_SPEED, m/s, 5~10Hz)
-기어          AAOS CarPropertyManager (GEAR_SELECTION)
+기어          Pleos Gear
 거리          Pleos Odometer (누적)
 브레이크 페달 Pleos Brake
 조향각        Pleos SteeringWheel (부호 반전 주의)
