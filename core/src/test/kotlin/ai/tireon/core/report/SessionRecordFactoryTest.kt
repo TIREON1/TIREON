@@ -7,9 +7,14 @@ import ai.tireon.core.driving.Confidence
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
 import ai.tireon.core.mission.DrivingMission
+import ai.tireon.core.mission.DrivingMissionResult
+import ai.tireon.core.mission.MissionResult
+import ai.tireon.core.mission.PracticeMission
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SessionRecordFactoryTest {
 
@@ -113,5 +118,59 @@ class SessionRecordFactoryTest {
 
         assertNull(record.mission)
         assertNull(record.missionSuccess)
+    }
+
+    private fun drivingRecord(missionResult: DrivingMissionResult?) = SessionRecordFactory.create(
+        id = "driving-7",
+        startedAtMs = 7_000L,
+        durationSec = 300,
+        distanceKm = 5f,
+        result = ScoreResult.Scored(DrivingScore(80), emptyList()),
+        events = emptyList(),
+        drivingMission = DrivingMission.SMOOTH_DRIVING,
+        drivingMissionResult = missionResult,
+    )
+
+    @Test
+    fun `주행 미션 요약을 기록에 남긴다`() {
+        val record = drivingRecord(DrivingMissionResult.Scored(eventCount = 1, detail = "급가속 1회, 급제동 0회"))
+
+        assertEquals("급가속 1회, 급제동 0회", record.missionDetail)
+        assertNull(record.missionSuccess)
+        assertFalse(record.missionInsufficient)
+    }
+
+    @Test
+    fun `주행 미션 판정 보류 사유를 기록에 남긴다`() {
+        val record = drivingRecord(DrivingMissionResult.Insufficient("브레이크 신호를 받지 못했어요"))
+
+        assertEquals("브레이크 신호를 받지 못했어요", record.missionDetail)
+        assertNull(record.missionSuccess)
+        assertTrue(record.missionInsufficient)
+    }
+
+    @Test
+    fun `주행 미션 결과가 없으면 상세도 없다`() {
+        val record = drivingRecord(null)
+
+        assertNull(record.missionDetail)
+        assertFalse(record.missionInsufficient)
+    }
+
+    @Test
+    fun `연습 미션 판정 보류도 보류로 남긴다`() {
+        val record = SessionRecordFactory.create(
+            id = "s8",
+            startedAtMs = 8_000L,
+            durationSec = 60,
+            distanceKm = 0.2f,
+            result = ScoreResult.Insufficient(InsufficientReason.DISTANCE_TOO_SHORT),
+            events = emptyList(),
+            mission = PracticeMission.STEADY_SPEED,
+            missionResult = MissionResult.Insufficient("속도 신호를 받지 못했어요"),
+        )
+
+        assertEquals("속도 신호를 받지 못했어요", record.missionDetail)
+        assertTrue(record.missionInsufficient)
     }
 }

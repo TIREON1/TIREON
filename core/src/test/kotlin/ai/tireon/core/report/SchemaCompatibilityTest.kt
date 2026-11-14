@@ -84,6 +84,30 @@ class SchemaCompatibilityTest {
         val decoded = json.decodeFromString(DrivingSessionRecord.serializer(), encoded)
 
         assertEquals(current, decoded)
-        assertEquals(2, decoded.schemaVersion)
+        assertEquals(3, decoded.schemaVersion)
+    }
+
+    @Test
+    fun `판정 보류 필드가 없는 버전 2 기록은 보류 아님으로 읽는다`() {
+        val stored = """
+            {
+              "schemaVersion": 2,
+              "id": "driving-1",
+              "startedAtMs": 4000,
+              "durationSec": 300,
+              "distanceKm": 3.0,
+              "score": 80,
+              "insufficientReason": null,
+              "eventCounts": {},
+              "mission": "SMOOTH_DRIVING",
+              "missionSuccess": null,
+              "missionDetail": null
+            }
+        """.trimIndent()
+
+        val record = json.decodeFromString(DrivingSessionRecord.serializer(), stored)
+
+        assertEquals(2, record.schemaVersion)
+        assertEquals(false, record.missionInsufficient)
     }
 }

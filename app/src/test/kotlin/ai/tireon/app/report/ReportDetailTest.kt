@@ -20,10 +20,12 @@ class ReportDetailTest {
         mission: String? = null,
         missionSuccess: Boolean? = null,
         missionDetail: String? = null,
+        missionInsufficient: Boolean = false,
+        id: String = "r1",
         distanceKm: Float? = 1.5f,
         durationSec: Int = 120,
     ) = DrivingSessionRecord(
-        id = "r1",
+        id = id,
         startedAtMs = 1_700_000_000_000L,
         durationSec = durationSec,
         distanceKm = distanceKm,
@@ -33,6 +35,7 @@ class ReportDetailTest {
         mission = mission,
         missionSuccess = missionSuccess,
         missionDetail = missionDetail,
+        missionInsufficient = missionInsufficient,
     )
 
     @Test
@@ -151,12 +154,63 @@ class ReportDetailTest {
     }
 
     @Test
-    fun `판정 불가면 라벨 없이 사유만 남긴다`() {
+    fun `연습 미션 판정 보류는 보류로 표시한다`() {
+        val detail = ReportDetail.from(
+            record(
+                mission = "STEADY_SPEED",
+                missionSuccess = null,
+                missionDetail = "신호 부족",
+                missionInsufficient = true,
+            ),
+        )
+
+        assertEquals("판정 보류", detail.missionLabel)
+        assertEquals("신호 부족", detail.missionDetail)
+    }
+
+    @Test
+    fun `보류 여부가 없는 이전 연습 기록도 보류로 표시한다`() {
         val detail = ReportDetail.from(
             record(mission = "STEADY_SPEED", missionSuccess = null, missionDetail = "신호 부족"),
         )
 
+        assertEquals("판정 보류", detail.missionLabel)
+    }
+
+    @Test
+    fun `주행 미션 요약을 표시한다`() {
+        val detail = ReportDetail.from(
+            record(
+                id = "driving-1",
+                mission = "SMOOTH_DRIVING",
+                missionDetail = "급가속 1회, 급제동 0회",
+            ),
+        )
+
+        assertEquals("주행 결과", detail.missionLabel)
+        assertEquals("급가속 1회, 급제동 0회", detail.missionDetail)
+        assertNull(detail.missionSuccess)
+    }
+
+    @Test
+    fun `주행 미션 판정 보류는 요약과 구분해 표시한다`() {
+        val detail = ReportDetail.from(
+            record(
+                id = "driving-1",
+                mission = "SMOOTH_DRIVING",
+                missionDetail = "브레이크 신호를 받지 못했어요",
+                missionInsufficient = true,
+            ),
+        )
+
+        assertEquals("판정 보류", detail.missionLabel)
+        assertEquals("브레이크 신호를 받지 못했어요", detail.missionDetail)
+    }
+
+    @Test
+    fun `주행 미션 결과가 없으면 라벨도 없다`() {
+        val detail = ReportDetail.from(record(id = "driving-1", mission = "SMOOTH_DRIVING"))
+
         assertNull(detail.missionLabel)
-        assertEquals("신호 부족", detail.missionDetail)
     }
 }

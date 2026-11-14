@@ -181,7 +181,11 @@ private fun MissionSection(label: String, detail: ReportDetail) {
     ) {
         StatusChip(
             text = label,
-            icon = if (detail.missionSuccess == false) R.drawable.ic_replay else R.drawable.ic_check_circle,
+            icon = when (detail.missionSuccess) {
+                true -> R.drawable.ic_check_circle
+                false -> R.drawable.ic_replay
+                null -> R.drawable.ic_info
+            },
             color = when (detail.missionSuccess) {
                 true -> LocalStatusColors.current.good
                 false -> MaterialTheme.colorScheme.tertiary

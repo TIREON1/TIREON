@@ -37,6 +37,7 @@ data class ReportDetail(
         )
 
         private const val UNAVAILABLE = "사용할 수 없음"
+        private const val PENDING = "판정 보류"
 
         fun from(record: DrivingSessionRecord): ReportDetail = ReportDetail(
             scoreText = record.score?.toString(),
@@ -50,15 +51,29 @@ data class ReportDetail(
             durationText = formatDuration(record.durationSec),
             distanceText = record.distanceKm?.let { "%.1fkm".format(it) } ?: UNAVAILABLE,
             events = toEventLines(record.eventCounts),
-            missionLabel = when (record.missionSuccess) {
-                true -> "목표 달성"
-                false -> "다시 해볼까요"
-                null -> null
-            },
+            missionLabel = missionLabelOf(record),
             missionDetail = record.missionDetail,
             missionSuccess = record.missionSuccess,
             kind = SessionKind.of(record),
         )
+
+        /**
+         * 주행 미션은 성공·실패를 가르지 않아 [DrivingSessionRecord.missionSuccess]가 null이다.
+         * 그래서 요약이 있으면 "주행 결과"로, 판정을 보류했으면 "판정 보류"로 나눠 보여준다.
+         * 보류를 0회와 같은 정상 결과로 보이지 않게 하기 위해서다. 연습 미션은 판정했으면
+         * 성공·실패가 있으므로, null인데 문구가 있으면 보류다. 버전 2 이하 기록은
+         * [DrivingSessionRecord.missionInsufficient]가 없어 이 규칙으로 구분한다.
+         */
+        private fun missionLabelOf(record: DrivingSessionRecord): String? = when (record.missionSuccess) {
+            true -> "목표 달성"
+            false -> "다시 해볼까요"
+            null -> when {
+                record.missionDetail == null -> null
+                record.missionInsufficient -> PENDING
+                SessionKind.of(record) is SessionKind.Driving -> "주행 결과"
+                else -> PENDING
+            }
+        }
 
         private fun reasonOf(reason: String?): String = when (reason) {
             "DISTANCE_TOO_SHORT" -> "조금 더 길게 주행하면 점수를 낼 수 있어요"

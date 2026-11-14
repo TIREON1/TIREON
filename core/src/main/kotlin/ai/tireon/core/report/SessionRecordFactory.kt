@@ -3,6 +3,7 @@ package ai.tireon.core.report
 import ai.tireon.core.analysis.ScoreResult
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.mission.DrivingMission
+import ai.tireon.core.mission.DrivingMissionResult
 import ai.tireon.core.mission.MissionResult
 import ai.tireon.core.mission.PracticeMission
 
@@ -13,10 +14,11 @@ object SessionRecordFactory {
      * @param mission 연습 미션. 연습 세션이 아니면 null.
      * @param missionResult 연습 미션 판정 결과.
      * @param drivingMission 주행 미션. 고르지 않았으면 null.
+     * @param drivingMissionResult 주행 미션 평가 결과. 요약이나 판정 보류 사유를 남긴다.
      *
      * 주행 미션은 성공·실패를 가르지 않는다. 실도로는 통제할 수 없는 변수가 많아
      * 합격·불합격보다 "무엇이 몇 번 있었는지"를 보여주는 편이 정직하다. 그래서
-     * [drivingMission]은 이름만 남기고 `missionSuccess`는 null로 둔다.
+     * [drivingMission]은 이름과 요약만 남기고 `missionSuccess`는 null로 둔다.
      */
     fun create(
         id: String,
@@ -28,6 +30,7 @@ object SessionRecordFactory {
         mission: PracticeMission? = null,
         missionResult: MissionResult? = null,
         drivingMission: DrivingMission? = null,
+        drivingMissionResult: DrivingMissionResult? = null,
     ): DrivingSessionRecord {
         val counts = events.groupingBy { it.type.name }.eachCount()
 
@@ -46,8 +49,15 @@ object SessionRecordFactory {
             is MissionResult.Success -> missionResult.detail
             is MissionResult.Failed -> missionResult.detail
             is MissionResult.Insufficient -> missionResult.reason
-            null -> null
+            null -> when (drivingMissionResult) {
+                is DrivingMissionResult.Scored -> drivingMissionResult.detail
+                is DrivingMissionResult.Insufficient -> drivingMissionResult.reason
+                null -> null
+            }
         }
+
+        val insufficient = missionResult is MissionResult.Insufficient ||
+            (missionResult == null && drivingMissionResult is DrivingMissionResult.Insufficient)
 
         return DrivingSessionRecord(
             id = id,
@@ -60,6 +70,7 @@ object SessionRecordFactory {
             mission = mission?.name ?: drivingMission?.name,
             missionSuccess = success,
             missionDetail = detail,
+            missionInsufficient = insufficient,
         )
     }
 }
