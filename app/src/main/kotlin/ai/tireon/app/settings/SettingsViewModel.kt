@@ -17,17 +17,22 @@ class SettingsViewModel(
     )
     val info: StateFlow<SettingsInfo> = _info.asStateFlow()
 
+    /** 이전 응답을 버리는 기준. 선언을 init보다 앞에 두어 초기화 순서에 기대지 않는다. */
+    private var requestId = 0
+
+    /** [requestId]는 콜백 스레드에서도 읽으므로 증감과 확인을 같은 락으로 묶는다. */
+    private val requestLock = Any()
+
     init {
         load()
     }
 
-    private var requestId = 0
-
     /** 화면에 다시 들어올 때 차량 정보를 갱신한다. 늦게 온 이전 응답은 버린다. */
     fun load() {
-        val id = ++requestId
+        val id = synchronized(requestLock) { ++requestId }
         infoSource.readInfo { connected, vin ->
-            if (id != requestId) return@readInfo
+            val isLatest = synchronized(requestLock) { id == requestId }
+            if (!isLatest) return@readInfo
             _info.value = _info.value.copy(
                 vehicleAvailable = connected,
                 vin = vin,

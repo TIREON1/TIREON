@@ -153,7 +153,8 @@ Intent("ai.pleos.playground.intent.action.APP_ACTION_RESPONSE").apply {
 | n=9 | DRIVE | 12.5 | 0.0 | true | LEFT |
 
 - 속도 12.5 m/s는 주입값 45 km/h에 해당합니다.
-- 조향 120.0은 주입값 120과 부호까지 일치합니다.
+- 조향 120.0은 주입값 120에 해당합니다. 이 초기 스파이크에서는 부호가 그대로
+  들어왔습니다.
 - 기어, 브레이크, 방향지시등 모두 주입대로 바뀝니다.
 - 세션 종료 신호를 보내자 샘플이 정확히 멈췄습니다(n=20이 마지막). 리스너 해제가 동작합니다.
 
@@ -392,8 +393,9 @@ median: 110.3 ms   mean: 141.8 ms   약 5~10 Hz
   계산할 수 있습니다.
 - 주의할 점이 있습니다. `getCarPropertyConfig()`가 이 에뮬레이터에서 null을
   반환합니다. `minSampleRate`와 `maxSampleRate`를 조회할 수 없습니다.
-  그래서 요청 주파수는 1Hz로 두고, 실제 dt는 타임스탬프 차분으로 계산하는
-  방식이 안전합니다.
+  그래서 실제 dt는 타임스탬프 차분으로 계산합니다. 현재 구현은 속도를 10Hz
+  (`AaosSpeedReader`), 기어를 1Hz(`AaosGearReader`)로 등록합니다. 속도는 이
+  프로퍼티의 지원 범위가 10~20Hz라 1Hz 등록이 거부되기 때문입니다.
 
 ### Pleos Vehicle SDK: 사용 가능 (실측)
 
@@ -439,7 +441,7 @@ GPS           FusedLocation (보조)
 2. AAOS 접근 코드는 `:pleos` 모듈 안에 두어 SDK 격리 원칙을 지킵니다.
    `android.car.jar`는 `compileOnly`로 컴파일하고, 런타임에는 차량
    프레임워크가 제공합니다.
-3. 샘플레이트는 1Hz로 요청하되 실제 dt는 타임스탬프로 계산합니다.
+3. 속도는 10Hz, 기어는 1Hz로 등록하고, 실제 dt는 타임스탬프로 계산합니다.
    `getCarPropertyConfig`가 null이라 선언된 레이트를 신뢰할 수 없습니다.
    최소 100ms 간격이 확보되므로 급가속 판정은 가능합니다.
 4. 급가속과 급제동은 속도 미분과 브레이크 페달 두 신호로 판정합니다.
