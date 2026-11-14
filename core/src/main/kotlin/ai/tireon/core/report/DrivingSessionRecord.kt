@@ -19,6 +19,7 @@ import kotlinx.serialization.Serializable
  * 버전 이력:
  * - 1: 최초 형식
  * - 2: 미션 결과 필드 추가 (mission, missionSuccess, missionDetail)
+ * - 3: 미션 판정 가능 여부 추가 (missionEvaluated). null은 이전 기록 또는 미션 없음.
  */
 @Serializable
 data class DrivingSessionRecord(
@@ -33,9 +34,11 @@ data class DrivingSessionRecord(
     val mission: String? = null,
     val missionSuccess: Boolean? = null,
     val missionDetail: String? = null,
+    /** true: 판정 완료, false: 데이터 부족으로 보류, null: 기록되지 않음. */
+    val missionEvaluated: Boolean? = null,
 ) {
     companion object {
-        /** 미션 결과를 담기 시작한 버전. */
-        const val CURRENT_SCHEMA_VERSION = 2
+        /** 현재 저장 형식. 이전 버전은 새 필드의 기본값으로 읽는다. */
+        const val CURRENT_SCHEMA_VERSION = 3
     }
 }

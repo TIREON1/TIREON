@@ -212,10 +212,10 @@ TIREON은 총 3명의 팀원이 함께 개발하는 프로젝트입니다.
 | --- | --- |
 | APK 위치 | [`apk/TIREON_TIREON_release.apk`](apk/TIREON_TIREON_release.apk) |
 | 빌드 | release, 팀 서명 키로 서명 (APK Signature Scheme v2) |
-| 빌드 소스 | [`ef273ae`](https://github.com/TIREON1/TIREON/commit/ef273aea21bf941923c8cfeba32e1770d8907055) (태그 `v1.1.0`) |
-| 빌드 실행 | [Release #43399999218](https://github.com/TIREON1/TIREON/actions/runs/43399999218), [GitHub Release v1.1.0](https://github.com/TIREON1/TIREON/releases/tag/v1.1.0) |
-| APK SHA-256 | `a5f22a2679585de0716d6667da440dcf93b5f38d3eeb62f6a6b19fcbf0e5e901` |
-| 버전 | 1.1.0 (versionCode 2), 패키지 `ai.tireon.app` |
+| 빌드 소스 | [`ac534ee`](https://github.com/TIREON1/TIREON/commit/ac534eef4bac8c1ff80dd0b5300a9ffc2c3faae8), 주행 미션 리포트·기록 보존·내비 복귀 뒤로가기 수정 |
+| 빌드 실행 | [Release #43470216333](https://github.com/TIREON1/TIREON/actions/runs/43470216333) |
+| APK SHA-256 | `7414dd81571e9f3cd814712eaf3ad94030ecfec3d2f97cb0c7fb04a8eee189e5` |
+| 버전 | 1.1.1 (versionCode 3), 패키지 `ai.tireon.app` |
 | 개발·테스트 에뮬레이터 | Pleos Connect Emulator v2.1.0 (Android 14 / API 34, arm64·x86_64 시스템 이미지) |
 | 화면 규격 | 2560×1440, 160dpi |
 
@@ -228,6 +228,8 @@ adb install -r apk/TIREON_TIREON_release.apk
 디버그 빌드가 설치되어 있으면 서명이 달라 설치가 거부됩니다. `adb uninstall ai.tireon.app`으로 먼저 지웁니다.
 
 차량 신호(기어, 속도, 조향, 방향지시등)는 에뮬레이터의 Virtual Console에서 바꿀 수 있습니다. 앱은 차량이 정지했을 때만 조작 화면을 보여 주고, 주행 중에는 시스템이 화면을 가립니다.
+
+최종 수정·테스트와 내비게이션 검증 범위는 [최종 개발 검증](docs/validation/final-2026-11-14.md)에 기록했습니다.
 
 ### 7.1 개발 환경 준비
 

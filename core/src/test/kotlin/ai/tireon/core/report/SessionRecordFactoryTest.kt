@@ -7,6 +7,7 @@ import ai.tireon.core.driving.Confidence
 import ai.tireon.core.driving.DrivingEvent
 import ai.tireon.core.driving.DrivingEventType
 import ai.tireon.core.mission.DrivingMission
+import ai.tireon.core.mission.DrivingMissionResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -114,4 +115,27 @@ class SessionRecordFactoryTest {
         assertNull(record.mission)
         assertNull(record.missionSuccess)
     }
+
+    @Test
+    fun `주행 미션 요약과 판정 상태를 저장한다`() {
+        val record = drivingRecord(DrivingMissionResult.Scored(1, "급가속 1회, 급제동 0회"))
+        assertEquals("급가속 1회, 급제동 0회", record.missionDetail)
+        assertEquals(true, record.missionEvaluated)
+        assertNull(record.missionSuccess)
+    }
+
+    @Test
+    fun `주행 미션 보류 사유를 점수와 별개로 저장한다`() {
+        val record = drivingRecord(DrivingMissionResult.Insufficient("브레이크 신호를 받지 못했어요"))
+        assertEquals("브레이크 신호를 받지 못했어요", record.missionDetail)
+        assertEquals(false, record.missionEvaluated)
+        assertEquals(80, record.score)
+        assertNull(record.missionSuccess)
+    }
+
+    private fun drivingRecord(result: DrivingMissionResult) = SessionRecordFactory.create(
+        id = "driving-test", startedAtMs = 1000L, durationSec = 120, distanceKm = 1f,
+        result = ScoreResult.Scored(DrivingScore(80), emptyList()), events = emptyList(),
+        drivingMission = DrivingMission.SMOOTH_DRIVING, drivingMissionResult = result,
+    )
 }

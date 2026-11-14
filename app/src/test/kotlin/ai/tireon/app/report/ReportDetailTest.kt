@@ -151,12 +151,38 @@ class ReportDetailTest {
     }
 
     @Test
-    fun `판정 불가면 라벨 없이 사유만 남긴다`() {
+    fun `연습 판정 불가면 보류 라벨과 사유를 표시한다`() {
         val detail = ReportDetail.from(
             record(mission = "STEADY_SPEED", missionSuccess = null, missionDetail = "신호 부족"),
         )
 
-        assertNull(detail.missionLabel)
+        assertEquals("판정 보류", detail.missionLabel)
         assertEquals("신호 부족", detail.missionDetail)
+    }
+
+    @Test
+    fun `주행 정상 판정은 성공 판정 없이 요약을 표시한다`() {
+        val detail = ReportDetail.from(record(mission = "SMOOTH_DRIVING", missionDetail = "급가속 1회, 급제동 0회")
+            .copy(missionEvaluated = true))
+        assertEquals("주행 미션 요약", detail.missionLabel)
+        assertEquals("급가속 1회, 급제동 0회", detail.missionDetail)
+        assertNull(detail.missionSuccess)
+    }
+
+    @Test
+    fun `주행 보류는 점수가 있어도 보류 사유를 표시한다`() {
+        val detail = ReportDetail.from(record(mission = "SMOOTH_DRIVING", missionDetail = "브레이크 신호를 받지 못했어요")
+            .copy(missionEvaluated = false))
+        assertEquals("판정 보류", detail.missionLabel)
+        assertEquals("브레이크 신호를 받지 못했어요", detail.missionDetail)
+        assertNull(detail.missionSuccess)
+    }
+
+    @Test
+    fun `과거 주행 기록에 없는 미션 결과는 만들지 않는다`() {
+        val detail = ReportDetail.from(record(mission = "SMOOTH_DRIVING").copy(schemaVersion = 2))
+        assertNull(detail.missionLabel)
+        assertNull(detail.missionDetail)
+        assertNull(detail.missionEvaluated)
     }
 }
